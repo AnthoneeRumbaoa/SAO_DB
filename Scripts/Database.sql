@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `SAO_DB`.`ENROLLMENT` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `Units` INT NOT NULL DEFAULT 0,
   `Grade` VARCHAR(9) NOT NULL DEFAULT " ",
-  `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT " ",
+  `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT "Failed",
   `Created_At` DATETIME NOT NULL DEFAULT NOW(),
   `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
   `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
