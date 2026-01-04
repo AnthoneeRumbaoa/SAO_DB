@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `SAO_DB`.`COURSE` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `Code` VARCHAR(7) NOT NULL DEFAULT " ",
   `Name` VARCHAR(50) NOT NULL DEFAULT " ",
+  `Credit_Units` INT NOT NULL DEFAULT 3,
   `Created_At` DATETIME NOT NULL DEFAULT NOW(),
   `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
   `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
@@ -135,7 +136,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `SAO_DB`.`ENROLLMENT` (
   `ID` INT NOT NULL AUTO_INCREMENT,
-  `Units` INT NOT NULL DEFAULT 3,
   `Grade` VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
   `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
   `Created_At` DATETIME NOT NULL DEFAULT NOW(),
