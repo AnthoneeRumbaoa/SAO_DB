@@ -21,8 +21,8 @@ BEGIN
         total_units, 
         total_points
     FROM ENROLLMENT
-    WHERE STUDENT_ID = student_id_param 
-      AND CURRICULUM_SEMESTER_ID = semester_id_param
+    WHERE STUDENT_ID = student_id_parameter
+      AND CURRICULUM_SEMESTER_ID = semester_id_parameter
       -- Only include records that actually have a grade (exclude currently enrolled)
       AND Grade IS NOT NULL;
 
