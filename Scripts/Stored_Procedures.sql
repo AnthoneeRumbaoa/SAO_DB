@@ -17,18 +17,18 @@ BEGIN
             lastName,
             firstName,
             Section,
-            Year,
             Created_By,
-            Updated_By
+            Updated_By,
+            YEAR_ID
         )
         VALUES (
             ID_Number,
             lastName,
             firstName,
             Section,
-            Year,
             'registrar',
-            'registrar'
+            'registrar',
+            Year
         );
     END IF;
 END $$
