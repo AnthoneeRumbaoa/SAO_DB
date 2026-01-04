@@ -47,7 +47,6 @@ CREATE PROCEDURE StudentEnroll (
 )
 BEGIN
     INSERT INTO ENROLLMENT (
-        Units,
         Grade,
         Status,
         Created_By,
@@ -59,7 +58,6 @@ BEGIN
         CURRICULUM_YEAR_ID
     )
     VALUES (
-        3,
         '(Ongoing)',
         'Active',
         'registrar',
@@ -106,8 +104,7 @@ BEGIN
         COURSE.Code,
         COURSE.Name AS Course,
         ENROLLMENT.Grade,
-        ENROLLMENT.Status,
-        ENROLLMENT.Units
+        ENROLLMENT.Status
     FROM ENROLLMENT
     JOIN STUDENT
         ON ENROLLMENT.STUDENT_ID = STUDENT.ID_Number
