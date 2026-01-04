@@ -68,7 +68,7 @@ BEGIN
     )
     VALUES (
         3,
-        'INC',
+        '(Ongoing)',
         'Active',
         NOW(),
         NOW(),
