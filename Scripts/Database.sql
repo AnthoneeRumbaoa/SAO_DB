@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS `SAO_DB`.`STUDENT` (
   `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
   `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
   `Updated_By` VARCHAR(45) NOT NULL DEFAULT " ",
+  INDEX `lastName_index` (`lastName` ASC) VISIBLE,
   PRIMARY KEY (`ID_Number`))
 ENGINE = InnoDB;
 
