@@ -90,13 +90,11 @@ DELIMITER $$
 CREATE PROCEDURE GradeUpdate (
     IN ENROLLMENT_ID INT,
     IN Grade VARCHAR(9),
-    IN Status VARCHAR(10)
 )
 BEGIN
     UPDATE ENROLLMENT
     SET
         Grade = Grade,
-        Status = Status,
         Updated_At = NOW(),
         Updated_By = 'registrar'
     WHERE ID = ENROLLMENT_ID;
