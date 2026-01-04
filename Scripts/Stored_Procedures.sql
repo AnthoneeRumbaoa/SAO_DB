@@ -1,6 +1,4 @@
--- Empty
-
---Adding a Student
+-- Adding a Student
 DELIMITER $$
 
 CREATE PROCEDURE AddStudent (
