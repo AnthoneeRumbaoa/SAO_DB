@@ -18,8 +18,6 @@ BEGIN
             firstName,
             Section,
             Year,
-            Created_At,
-            Updated_At,
             Created_By,
             Updated_By
         )
@@ -29,8 +27,6 @@ BEGIN
             firstName,
             Section,
             Year,
-            NOW(),
-            NOW(),
             'registrar',
             'registrar'
         );
@@ -54,8 +50,6 @@ BEGIN
         Units,
         Grade,
         Status,
-        Created_At,
-        Updated_At,
         Created_By,
         Updated_By,
         STUDENT_ID,
@@ -68,8 +62,6 @@ BEGIN
         3,
         '(Ongoing)',
         'Active',
-        NOW(),
-        NOW(),
         'registrar',
         'registrar',
         STUDENT_ID,
