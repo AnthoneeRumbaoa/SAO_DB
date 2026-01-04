@@ -14,6 +14,20 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 CREATE SCHEMA IF NOT EXISTS `SAO_DB` DEFAULT CHARACTER SET utf8 ;
 USE `SAO_DB` ;
 
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`YEAR`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`YEAR` (
+  `ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT " ",
+  PRIMARY KEY (`ID`))
+ENGINE = InnoDB;
+
+
 -- -----------------------------------------------------
 -- Table `SAO_DB`.`STUDENT`
 -- -----------------------------------------------------
@@ -22,13 +36,19 @@ CREATE TABLE IF NOT EXISTS `SAO_DB`.`STUDENT` (
   `lastName` VARCHAR(30) NOT NULL DEFAULT " ",
   `firstName` VARCHAR(30) NOT NULL DEFAULT " ",
   `Section` VARCHAR(45) NOT NULL DEFAULT " ",
-  `Year` INT NOT NULL DEFAULT 1,
   `Created_At` DATETIME NOT NULL DEFAULT NOW(),
   `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
   `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
   `Updated_By` VARCHAR(45) NOT NULL DEFAULT " ",
+  `YEAR_ID` INT NOT NULL,
   INDEX `lastName_index` (`lastName` ASC) VISIBLE,
-  PRIMARY KEY (`ID_Number`))
+  PRIMARY KEY (`ID_Number`),
+  INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_STUDENT_YEAR1`
+    FOREIGN KEY (`YEAR_ID`)
+    REFERENCES `SAO_DB`.`YEAR` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
@@ -75,19 +95,6 @@ CREATE TABLE IF NOT EXISTS `SAO_DB`.`PROGRAM` (
   `Updated_By` VARCHAR(45) NOT NULL DEFAULT " ",
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `SAO_DB`.`YEAR`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`YEAR` (
-  `ID` INT NOT NULL,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT " ",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT " ",
-  PRIMARY KEY (`ID`))
 ENGINE = InnoDB;
 
 
