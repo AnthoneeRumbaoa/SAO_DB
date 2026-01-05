@@ -1,25 +1,3 @@
--- File for SQL functions (like the GWA calculator I guess)
-
---helper function
-DELIMITER //
- 
-CREATE FUNCTION GetNumericGrade (p_grade VARCHAR(9))
-RETURNS DECIMAL(3,2)
-DETERMINISTIC
-BEGIN
-    -- Map R and F to 0 for GWA calculation
-    IF p_grade = 'F' OR p_grade = 'R' OR p_grade IS NULL THEN
-        RETURN 0.00;
-    -- Return decimal value if numeric
-    ELSEIF (p_grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
-        RETURN CAST(p_grade AS DECIMAL(3,2));
-    ELSE
-        RETURN 0.00;
-    END IF;
-END //
- 
-DELIMITER ;
-
 -- Calculate GWA
 DELIMITER //
  
@@ -34,10 +12,12 @@ BEGIN
     DECLARE v_weighted_sum DECIMAL(10,2) DEFAULT 0.00;
  
     SELECT 
-        SUM(Units), 
-        SUM(GetNumericGrade(Grade) * Units)
+        SUM(Credit_Units), 
+        SUM(GetNumericGrade(Grade) * Credit_Units)
     INTO v_total_units, v_weighted_sum
-    FROM ENROLLMENT
+    FROM ENROLLMENT enr 
+    JOIN CURRICULUM cur ON enr.CURRICULUM_COURSE_ID = cur.COURSE_ID
+    JOIN COURSE cr ON cur.COURSE_ID = cr.ID
     WHERE STUDENT_ID = p_student_id
       AND CURRICULUM_SEMESTER_ID = p_semester_id
       AND Grade != '(Ongoing)'; -- Exclude classes that aren't finished
