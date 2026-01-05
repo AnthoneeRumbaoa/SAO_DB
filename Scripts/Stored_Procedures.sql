@@ -76,16 +76,32 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE GradeUpdate (
-    IN ENROLLMENT_ID INT,
-    IN Grade VARCHAR(9),
+    IN p_ENROLLMENT_ID INT,
+    IN p_RawGrade INT -- Input scale 1-100
 )
 BEGIN
+    DECLARE v_ConvertedGrade DECIMAL(3,2);
+
+    -- Convert 100-point scale to 4-point scale (Decimal)
+    SET v_ConvertedGrade = CASE 
+        WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
+        WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
+        WHEN p_RawGrade BETWEEN 87 AND 90  THEN 3.00
+        WHEN p_RawGrade BETWEEN 83 AND 86  THEN 2.50
+        WHEN p_RawGrade BETWEEN 79 AND 82  THEN 2.00
+        WHEN p_RawGrade BETWEEN 75 AND 78  THEN 1.50
+        WHEN p_RawGrade BETWEEN 70 AND 74  THEN 1.00
+        ELSE 0.00 -- Trigger will see 0.00 and set Status to 'Failed'
+    END;
+
+    -- Update the Enrollment record
+    -- The Trigger 'AutoUpdateStatus' will automatically set the Status column
     UPDATE ENROLLMENT
     SET
-        Grade = Grade,
+        Grade = CAST(v_ConvertedGrade AS CHAR),
         Updated_At = NOW(),
         Updated_By = 'registrar'
-    WHERE ID = ENROLLMENT_ID;
+    WHERE ID = p_ENROLLMENT_ID;
 END $$
 
 DELIMITER ;
