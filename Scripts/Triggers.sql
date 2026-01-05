@@ -28,34 +28,28 @@ END
 // DELIMITER ;
 
 
--- STATUS AUTO UPDATE ON GRADE CHANGE TRIGGER
 DELIMITER //
-
+ 
 CREATE TRIGGER AutoUpdateStatus
 BEFORE UPDATE ON ENROLLMENT
 FOR EACH ROW
 BEGIN
-    DECLARE Grade_num INT;
-
+    DECLARE v_grade_val DECIMAL(3,2);
+ 
     IF (NEW.Grade <=> OLD.Grade) = 0 THEN 
-        
-        IF (NEW.Grade REGEXP '^[0-9]+$') THEN
-            SET Grade_num = CAST(NEW.Grade AS SIGNED);
-        ELSE
-            SET Grade_num = NULL; 
-        END IF;
-
-        IF (Grade_num IS NULL) THEN
-            SET NEW.Status = "Active";
-        ELSE
-            IF (Grade_num BETWEEN 75 AND 100) THEN
-                SET NEW.Status = "Passed";
+        IF NEW.Grade = 'F' OR NEW.Grade = 'R' THEN
+            SET NEW.Status = 'Failed';
+        ELSEIF (NEW.Grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
+            SET v_grade_val = CAST(NEW.Grade AS DECIMAL(3,2));
+            IF v_grade_val >= 1.00 THEN
+                SET NEW.Status = 'Passed';
             ELSE
-                SET NEW.Status = "Failed";
+                SET NEW.Status = 'Failed';
             END IF;
+        ELSE
+            SET NEW.Status = 'Active';
         END IF;
-        
     END IF;
 END //
-
+ 
 DELIMITER ;
