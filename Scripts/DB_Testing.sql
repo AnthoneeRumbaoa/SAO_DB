@@ -226,8 +226,7 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE StudentEnroll (
-    IN STUDENT_FNAME VARCHAR(45),
-    IN STUDENT_LNAME VARCHAR(45),
+    IN STUDENT_FULLNAME VARCHAR(60),
     IN COURSE_CODE VARCHAR(50),
     IN PROGRAM_NAME VARCHAR(45),
     IN YEAR_ID INT,
@@ -240,7 +239,7 @@ BEGIN
 
     SELECT ID INTO course_id FROM COURSE WHERE Code = COURSE_CODE;
     SELECT ID INTO program_id FROM PROGRAM WHERE programName = PROGRAM_NAME;
-    SELECT ID_Number INTO student_id FROM STUDENT WHERE firstName = STUDENT_FNAME AND lastName = STUDENT_LNAME;
+    SELECT ID_Number INTO student_id FROM STUDENT WHERE fullName = STUDENT_FULLNAME;
 
     INSERT INTO ENROLLMENT (
         Grade,
@@ -269,39 +268,48 @@ END $$
 DELIMITER ;
 
 --Updates Student grade status
-DELIMITER $$
-
 CREATE PROCEDURE GradeUpdate (
-    IN p_ENROLLMENT_ID INT,
-    IN p_RawGrade INT -- Input scale 1-100
+    IN p_Student_Fullname VARCHAR(60),
+    IN p_Student_Section VARCHAR(45),
+    IN p_Course_Code VARCHAR(7),
+    IN p_RawGrade INT 
 )
 BEGIN
     DECLARE v_ConvertedGrade DECIMAL(3,2);
+    DECLARE v_Enrollment_ID INT DEFAULT NULL;
 
-    -- Convert 100-point scale to 4-point scale (Decimal)
-    SET v_ConvertedGrade = CASE 
-        WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
-        WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
-        WHEN p_RawGrade BETWEEN 87 AND 90  THEN 3.00
-        WHEN p_RawGrade BETWEEN 83 AND 86  THEN 2.50
-        WHEN p_RawGrade BETWEEN 79 AND 82  THEN 2.00
-        WHEN p_RawGrade BETWEEN 75 AND 78  THEN 1.50
-        WHEN p_RawGrade BETWEEN 70 AND 74  THEN 1.00
-        ELSE 0.00 -- Trigger will see 0.00 and set Status to 'Failed'
-    END;
+    -- Look for the SPECIFIC enrollment that is currently 'Ongoing'
+    SELECT e.ID INTO v_Enrollment_ID 
+    FROM ENROLLMENT e
+    JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number 
+    JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID
+    WHERE s.fullName = p_Student_Fullname 
+      AND c.Code = p_Course_Code
+      AND s.Section = p_Student_Section
+      AND e.Grade = '(Ongoing)' -- Ensure we only update the active attempt
+    LIMIT 1; 
 
-    -- Update the Enrollment record
-    -- The Trigger 'AutoUpdateStatus' will automatically set the Status column
-    UPDATE ENROLLMENT
-    SET
-        Grade = CAST(v_ConvertedGrade AS CHAR),
-        Updated_At = NOW(),
-        Updated_By = 'registrar'
-    WHERE ID = p_ENROLLMENT_ID;
+    IF v_Enrollment_ID IS NOT NULL THEN
+        -- Grade Conversion Logic...
+        SET v_ConvertedGrade = CASE 
+            WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
+            WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
+            WHEN p_RawGrade BETWEEN 87 AND 90  THEN 3.00
+            WHEN p_RawGrade BETWEEN 83 AND 86  THEN 2.50
+            WHEN p_RawGrade BETWEEN 79 AND 82  THEN 2.00
+            WHEN p_RawGrade BETWEEN 75 AND 78  THEN 1.50
+            WHEN p_RawGrade BETWEEN 70 AND 74  THEN 1.00
+            ELSE 0.00 
+        END;
+
+        UPDATE ENROLLMENT
+        SET Grade = CAST(v_ConvertedGrade AS CHAR(4)),
+            Updated_At = NOW(),
+            Updated_By = 'registrar'
+        WHERE ID = v_Enrollment_ID;
+    END IF;
 END $$
-
-DELIMITER ;
-
+  
 --Viewing Student academic records
 DELIMITER $$
 
