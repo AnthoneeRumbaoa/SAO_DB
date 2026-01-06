@@ -61,6 +61,7 @@ CREATE TABLE student (
   ID_Number VARCHAR(8) NOT NULL,
   lastName VARCHAR(30) NOT NULL DEFAULT " ",
   firstName VARCHAR(30) NOT NULL DEFAULT " ",
+  fullName varchar(60) GENERATED ALWAYS AS (CONCAT(firstName, ' ', lastName)) STORED,
   Section VARCHAR(45) NOT NULL DEFAULT " ",
   Created_At DATETIME NOT NULL DEFAULT NOW(),
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
