@@ -1,3 +1,4 @@
+
 DROP DATABASE IF EXISTS SAO_DB;
 CREATE SCHEMA IF NOT EXISTS SAO_DB;
 USE SAO_DB;
@@ -309,8 +310,7 @@ CREATE PROCEDURE StudentEnrollmentsViewer (
 BEGIN
     SELECT
         STUDENT.ID_Number,
-        STUDENT.firstName,
-        STUDENT.lastName,
+        CONCAT(STUDENT.lastName, ', ', STUDENT.firstName) AS Student_FullName,
         COURSE.Code,
         COURSE.Name AS Course,
         ENROLLMENT.Grade,
