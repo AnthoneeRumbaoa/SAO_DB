@@ -1,170 +1,280 @@
 DROP DATABASE IF EXISTS SAO_DB;
-CREATE SCHEMA IF NOT EXISTS SAO_DB;
+CREATE DATABASE IF NOT EXISTS SAO_DB;
 USE SAO_DB;
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`YEAR`
+-- Table year
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`YEAR` (
-  `ID` INT NOT NULL,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`))
+CREATE TABLE year (
+  ID INT NOT NULL,
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`));
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`STUDENT`
+-- Table program
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`STUDENT` (
-  `ID_Number` VARCHAR(8) NOT NULL,
-  `lastName` VARCHAR(30) NOT NULL DEFAULT " ",
-  `firstName` VARCHAR(30) NOT NULL DEFAULT " ",
-  `Section` VARCHAR(45) NOT NULL DEFAULT " ",
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `YEAR_ID` INT NOT NULL,
-  INDEX `lastName_index` (`lastName` ASC) VISIBLE,
+CREATE TABLE program (
+  ID INT NOT NULL AUTO_INCREMENT,
+  programName VARCHAR(45) NOT NULL DEFAULT " ",
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`));
+
+-- -----------------------------------------------------
+-- Table semester
+-- -----------------------------------------------------
+CREATE TABLE semester (
+  ID INT NOT NULL,
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`));
+
+-- -----------------------------------------------------
+-- Table course
+-- -----------------------------------------------------
+CREATE TABLE course (
+  ID INT NOT NULL AUTO_INCREMENT,
+  Code VARCHAR(7) NOT NULL DEFAULT " ",
+  Name VARCHAR(50) NOT NULL DEFAULT " ",
+  Credit_Units INT NOT NULL DEFAULT 3,
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`));
+
+-- -----------------------------------------------------
+-- Table student
+-- -----------------------------------------------------
+CREATE TABLE student (
+  ID_Number VARCHAR(8) NOT NULL,
+  lastName VARCHAR(30) NOT NULL DEFAULT " ",
+  firstName VARCHAR(30) NOT NULL DEFAULT " ",
+  Section VARCHAR(45) NOT NULL DEFAULT " ",
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  YEAR_ID INT NOT NULL,
   PRIMARY KEY (`ID_Number`),
-  INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_STUDENT_YEAR1`
-    FOREIGN KEY (`YEAR_ID`)
-    REFERENCES `SAO_DB`.`YEAR` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  CONSTRAINT fk_student_year FOREIGN KEY (YEAR_ID) REFERENCES year (ID));
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`COURSE`
+-- Table curriculum
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`COURSE` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `Code` VARCHAR(7) NOT NULL DEFAULT " ",
-  `Name` VARCHAR(50) NOT NULL DEFAULT " ",
-  `Credit_Units` INT NOT NULL DEFAULT 3,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `Code_UNIQUE` (`Code` ASC) VISIBLE,
-  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE)
+CREATE TABLE curriculum (
+  PROGRAM_ID INT NOT NULL,
+  YEAR_ID INT NOT NULL,
+  SEMESTER_ID INT NOT NULL,
+  COURSE_ID INT NOT NULL,
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID),
+  CONSTRAINT fk_curr_program FOREIGN KEY (PROGRAM_ID) REFERENCES program (ID),
+  CONSTRAINT fk_curr_year FOREIGN KEY (YEAR_ID) REFERENCES year (ID),
+  CONSTRAINT fk_curr_semester FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
+  CONSTRAINT fk_curr_course FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`SEMESTER`
+-- Table enrollment
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`SEMESTER` (
-  `ID` INT NOT NULL,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`))
+CREATE TABLE enrollment (
+  ID INT NOT NULL AUTO_INCREMENT,
+  Grade VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
+  Status ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  STUDENT_ID VARCHAR(8) NOT NULL,
+  CURRICULUM_PROGRAM_ID INT NOT NULL,
+  CURRICULUM_YEAR_ID INT NOT NULL,
+  CURRICULUM_SEMESTER_ID INT NOT NULL,
+  CURRICULUM_COURSE_ID INT NOT NULL,
+  PRIMARY KEY (ID),
+  CONSTRAINT fk_enroll_student FOREIGN KEY (STUDENT_ID) REFERENCES student (ID_Number),
+  CONSTRAINT fk_enroll_curr FOREIGN KEY (CURRICULUM_PROGRAM_ID, CURRICULUM_YEAR_ID, CURRICULUM_SEMESTER_ID, CURRICULUM_COURSE_ID) 
+    REFERENCES curriculum (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID));
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`PROGRAM`
+-- Table course_prerequisite
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`PROGRAM` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `programName` VARCHAR(45) NOT NULL DEFAULT " ",
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE)
+CREATE TABLE course_prerequisite (
+  PREREQUISITE_ID INT NOT NULL,
+  COURSE_ID INT NOT NULL,
+  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Updated_At DATETIME NOT NULL DEFAULT NOW(),
+  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (PREREQUISITE_ID, COURSE_ID),
+  CONSTRAINT fk_pre_course FOREIGN KEY (PREREQUISITE_ID) REFERENCES course (ID),
+  CONSTRAINT fk_parent_course FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`CURRICULUM`
+-- Base Setup (Years, Programs, Semesters)
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`CURRICULUM` (
-  `PROGRAM_ID` INT NOT NULL,
-  `YEAR_ID` INT NOT NULL,
-  `SEMESTER_ID` INT NOT NULL,
-  `COURSE_ID` INT NOT NULL,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`),
-  INDEX `fk_COURSE_SEMESTER_PROGRAM_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
-  INDEX `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1_idx` (`PROGRAM_ID` ASC) VISIBLE,
-  INDEX `fk_CURRICULUM_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1`
-    FOREIGN KEY (`PROGRAM_ID`)
-    REFERENCES `SAO_DB`.`PROGRAM` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_CURRICULUM_YEAR1`
-    FOREIGN KEY (`YEAR_ID`)
-    REFERENCES `SAO_DB`.`YEAR` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_SEMESTER1`
-    FOREIGN KEY (`SEMESTER_ID`)
-    REFERENCES `SAO_DB`.`SEMESTER` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_COURSE1`
-    FOREIGN KEY (`COURSE_ID`)
-    REFERENCES `SAO_DB`.`COURSE` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+INSERT INTO `YEAR` (`ID`) VALUES (2), (3);
+
+INSERT INTO `PROGRAM` (`programName`) VALUES ('BSCS'), ('BSIT');
+
+INSERT INTO `SEMESTER` (`ID`) VALUES (1), (2);
 
 -- -----------------------------------------------------
--- Table `SAO_DB`.`ENROLLMENT`
+-- Student Master Records
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`ENROLLMENT` (
-  `ID` INT NOT NULL AUTO_INCREMENT,
-  `Grade` VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
-  `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `STUDENT_ID` VARCHAR(8) NOT NULL,
-  `CURRICULUM_SEMESTER_ID` INT NOT NULL,
-  `CURRICULUM_COURSE_ID` INT NOT NULL,
-  `CURRICULUM_PROGRAM_ID` INT NOT NULL,
-  `CURRICULUM_YEAR_ID` INT NOT NULL,
-  PRIMARY KEY (`ID`),
-  INDEX `fk_ENROLLMENT_STUDENT1_idx` (`STUDENT_ID` ASC) VISIBLE,
-  UNIQUE INDEX `unique_student_course_time` (`STUDENT_ID` ASC, `CURRICULUM_COURSE_ID` ASC, `CURRICULUM_YEAR_ID` ASC, `CURRICULUM_SEMESTER_ID` ASC),
-  INDEX `fk_ENROLLMENT_CURRICULUM1_idx` (`CURRICULUM_SEMESTER_ID` ASC, `CURRICULUM_COURSE_ID` ASC, `CURRICULUM_PROGRAM_ID` ASC, `CURRICULUM_YEAR_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_ENROLLMENT_STUDENT1`
-    FOREIGN KEY (`STUDENT_ID`)
-    REFERENCES `SAO_DB`.`STUDENT` (`ID_Number`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ENROLLMENT_CURRICULUM1`
-    FOREIGN KEY (`CURRICULUM_SEMESTER_ID` , `CURRICULUM_COURSE_ID` , `CURRICULUM_PROGRAM_ID` , `CURRICULUM_YEAR_ID`)
-    REFERENCES `SAO_DB`.`CURRICULUM` (`PROGRAM_ID` , `YEAR_ID` , `SEMESTER_ID` , `COURSE_ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`, `YEAR_ID`) VALUES 
+('2024-001', 'Abril', 'Sheryn Mae', 'A', 2),
+('2024-002', 'Ananayo', 'Breneth Jian', 'A', 2),
+('2024-003', 'Bacani', 'Jonard', 'A', 2),
+('2024-004', 'Biñas', 'Kurt Gabriel', 'A', 2),
+('2024-005', 'Buncab', 'Lance Gabriel', 'A', 2),
+('2024-006', 'Chavez', 'Amiel Diamond', 'A', 3),
+('2024-007', 'Corpuz', 'Terrence Josh', 'A', 3),
+('2024-008', 'Guzman', 'Klein Vincent De', 'A', 3),
+('2024-009', 'Cruz', 'Carlrich Dela', 'A', 2),
+('2024-010', 'Fama', 'Alijah Miguel', 'A', 2),
+('2024-011', 'Garcia', 'Ashton Brian', 'A', 2),
+('2024-012', 'Gemillan', 'Miles Angelo', 'A', 2),
+('2024-013', 'Genova', 'Carl Dheyniel', 'A', 3),
+('2024-014', 'Gutierrez', 'Yumilka', 'A', 2),
+('2024-015', 'Juane', 'Lancelot Jerico', 'A', 2),
+('2024-016', 'Laus', 'Angelo John Benedict', 'A', 3),
+('2024-017', 'Lopez', 'John Christian', 'A', 2),
+('2024-018', 'Mandac', 'Gian Patrick Luis', 'A', 2),
+('2024-019', 'Mendoza', 'Vinz Szymone', 'A', 3),
+('2024-020', 'Nacalaban', 'Chelsea Hillary', 'A', 3),
+('2024-021', 'Nagales', 'Qelvin Joszeler', 'A', 2),
+('2024-022', 'Nipas', 'Eunice', 'A', 2),
+('2024-023', 'Nollen', 'Elijah Crisehea', 'A', 3),
+('2024-024', 'Ochoa', 'John Adrian', 'A', 2),
+('2024-025', 'Padilla', 'Neichaela Antonia', 'A', 2),
+('2024-026', 'Peñada', 'Charl Christopher', 'A', 3),
+('2024-027', 'Recto', 'Rehan Rafael', 'A', 2),
+('2024-028', 'Revelar', 'Xander', 'A', 3),
+('2024-029', 'Ronquillo', 'Karol Joy', 'A', 2),
+('2024-030', 'Rumbaoa', 'Anthonee Jhel', 'A', 2),
+('2024-031', 'Sultan', 'Jan Samuel', 'A', 3),
+('2024-032', 'Tobias', 'Heinrich', 'A', 2),
+('2024-033', 'Villa', 'Andrei Antonio', 'A', 3),
+('2024-034', 'Viray', 'Kristoff Aadryk', 'A', 2),
+('2024-035', 'Whitwell', 'Daniel James', 'A', 3),
+('2024-036', 'Mangulabnan', 'Edgardo Jr.', 'A', 3);
 
--- -----------------------------------------------------
--- Table `SAO_DB`.`COURSE_PREREQUISITE`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `SAO_DB`.`COURSE_PREREQUISITE` (
-  `PREREQUISITE_ID` INT NOT NULL,
-  `COURSE_ID` INT NOT NULL,
-  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
-  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`PREREQUISITE_ID`, `COURSE_ID`),
-  INDEX `fk_COURSE_PREREQUISITE_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_PREREQUISITE_COURSE`
-    FOREIGN KEY (`PREREQUISITE_ID`)
-    REFERENCES `SAO_DB`.`COURSE` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_PARENT_COURSE`
-    FOREIGN KEY (`COURSE_ID`)
-    REFERENCES `SAO_DB`.`COURSE` (`ID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+--------------------------------------------------------------------------------------------------------
 
+INSERT INTO `COURSE` (`ID`, `Code`, `Name`) VALUES 
+(1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
+(3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
+(5, 'DATAMA1', 'Database Mgmt 1'), (6, 'DATAMA2', 'Database Mgmt 2');
 
+INSERT INTO `COURSE_PREREQUISITE` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
+
+INSERT INTO `CURRICULUM` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
+(1, 2, 1, 5), (1, 2, 2, 2), (1, 2, 2, 3), (1, 2, 2, 4), (1, 2, 2, 6), (1, 3, 1, 1),
+(1, 3, 1, 5), (1, 3, 2, 2), (1, 3, 2, 5), (1, 3, 2, 6), (2, 2, 1, 1), (2, 2, 1, 3),
+(2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
+(2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
+(2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
+
+INSERT INTO `ENROLLMENT` (`ID`, `Grade`, `Status`, `STUDENT_ID`, `CURRICULUM_SEMESTER_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_PROGRAM_ID`, `CURRICULUM_YEAR_ID`) VALUES
+(1, '92', 'Passed', '2024-001', 1, 1, 2, 2),
+(2, '70', 'Failed', '2024-002', 1, 1, 2, 2),
+(3, '85', 'Passed', '2024-003', 1, 5, 1, 2),
+(4, '76', 'Passed', '2024-006', 1, 3, 2, 3),
+(5, '90', 'Passed', '2024-013', 1, 1, 2, 3),
+(6, '95', 'Passed', '2024-014', 1, 5, 2, 2),
+(8, '88', 'Passed', '2024-016', 1, 1, 2, 3),
+(9, '78', 'Passed', '2024-017', 1, 3, 2, 2),
+(10, '80', 'Passed', '2024-018', 1, 1, 2, 2),
+(11, '91', 'Passed', '2024-019', 1, 5, 2, 3),
+(12, '72', 'Failed', '2024-020', 1, 1, 1, 3),
+(13, '85', 'Passed', '2024-021', 1, 5, 2, 2),
+(14, '90', 'Passed', '2024-022', 1, 3, 2, 2),
+(15, '75', 'Passed', '2024-023', 1, 1, 2, 3),
+(16, '89', 'Passed', '2024-024', 1, 5, 1, 2),
+(18, '94', 'Passed', '2024-026', 1, 3, 2, 3),
+(19, '77', 'Passed', '2024-027', 1, 5, 1, 2),
+(20, '93', 'Passed', '2024-028', 1, 1, 2, 3),
+(21, '88', 'Passed', '2024-001', 2, 2, 2, 2),
+(22, '84', 'Passed', '2024-003', 2, 6, 1, 2),
+(23, '92', 'Passed', '2024-006', 2, 4, 2, 3),
+(24, '78', 'Passed', '2024-014', 2, 6, 2, 2),
+(25, '82', 'Passed', '2024-016', 2, 2, 2, 3),
+(26, '79', 'Passed', '2024-017', 2, 4, 2, 2),
+(27, '89', 'Passed', '2024-018', 2, 2, 2, 2),
+(28, '92', 'Passed', '2024-019', 2, 6, 2, 3),
+(29, '87', 'Passed', '2024-021', 2, 6, 2, 2),
+(30, '91', 'Passed', '2024-022', 2, 4, 2, 2),
+(31, '86', 'Passed', '2024-023', 2, 2, 2, 3),
+(32, '81', 'Passed', '2024-024', 2, 6, 1, 2),
+(34, '90', 'Passed', '2024-026', 2, 4, 2, 3),
+(35, '76', 'Passed', '2024-027', 2, 6, 1, 2),
+(36, '88', 'Passed', '2024-028', 2, 2, 2, 3),
+(37, '85', 'Passed', '2024-029', 1, 1, 2, 2),
+(38, '79', 'Passed', '2024-030', 1, 5, 1, 2),
+(39, '70', 'Failed', '2024-031', 1, 3, 2, 3),
+(40, '84', 'Passed', '2024-032', 1, 1, 2, 2),
+(41, '92', 'Passed', '2024-033', 1, 5, 1, 3),
+(42, '81', 'Passed', '2024-034', 1, 1, 2, 2),
+(43, '93', 'Passed', '2024-035', 1, 3, 2, 3),
+(44, '87', 'Passed', '2024-036', 1, 1, 1, 3),
+(45, '65', 'Failed', '2024-004', 1, 5, 2, 2),
+(47, '80', 'Passed', '2024-001', 2, 3, 2, 2),
+(48, '79', 'Passed', '2024-002', 2, 5, 2, 2),
+(49, '91', 'Passed', '2024-003', 2, 2, 1, 2),
+(50, '85', 'Passed', '2024-006', 2, 6, 2, 3),
+(51, '82', 'Passed', '2024-013', 2, 2, 2, 3),
+(52, '75', 'Passed', '2024-014', 2, 3, 2, 2),
+(54, '85', 'Passed', '2024-016', 2, 3, 2, 3),
+(55, '79', 'Passed', '2024-017', 2, 2, 2, 2),
+(56, '88', 'Passed', '2024-018', 2, 6, 2, 2),
+(57, '92', 'Passed', '2024-019', 2, 2, 2, 3),
+(58, '78', 'Passed', '2024-020', 2, 5, 1, 3),
+(59, '87', 'Passed', '2024-021', 2, 2, 2, 2),
+(60, '83', 'Passed', '2024-022', 2, 6, 2, 2),
+(61, '86', 'Passed', '2024-023', 2, 2, 2, 3),
+(62, '81', 'Passed', '2024-024', 2, 3, 1, 2),
+(64, '90', 'Passed', '2024-026', 2, 6, 2, 3),
+(65, '83', 'Passed', '2024-027', 2, 2, 1, 2),
+(66, '94', 'Passed', '2024-028', 2, 3, 2, 3),
+(67, '79', 'Passed', '2024-029', 2, 2, 2, 2),
+(68, '82', 'Passed', '2024-030', 2, 6, 1, 2),
+(69, '72', 'Failed', '2024-031', 2, 1, 2, 3),
+(70, '85', 'Passed', '2024-032', 2, 6, 2, 2),
+(71, '88', 'Passed', '2024-033', 2, 2, 1, 3),
+(72, '93', 'Passed', '2024-034', 2, 6, 2, 2),
+(73, '91', 'Passed', '2024-035', 2, 2, 2, 3),
+(74, '84', 'Passed', '2024-036', 2, 6, 1, 3),
+(75, '89', 'Passed', '2024-004', 2, 1, 2, 2),
+(77, '(Ongoing)', 'Active', '2024-001', 2, 6, 2, 2),
+(78, '(Ongoing)', 'Active', '2024-002', 2, 4, 2, 2),
+(79, '(Ongoing)', 'Active', '2024-003', 2, 6, 1, 2),
+(80, '(Ongoing)', 'Active', '2024-006', 2, 2, 2, 3),
+(81, '(Ongoing)', 'Active', '2024-013', 2, 4, 2, 3),
+(82, '(Ongoing)', 'Active', '2024-014', 2, 6, 2, 2),
+(84, '(Ongoing)', 'Active', '2024-016', 2, 6, 2, 3),
+(85, '(Ongoing)', 'Active', '2024-017', 2, 4, 2, 2),
+(86, '(Ongoing)', 'Active', '2024-018', 2, 2, 2, 2),
+(87, '(Ongoing)', 'Active', '2024-019', 2, 3, 2, 3),
+(88, '(Ongoing)', 'Active', '2024-020', 2, 6, 1, 3),
+(89, '(Ongoing)', 'Active', '2024-021', 2, 4, 2, 2),
+(90, '(Ongoing)', 'Active', '2024-022', 2, 2, 2, 2),
+(91, '(Ongoing)', 'Active', '2024-023', 2, 6, 2, 3),
+(92, '(Ongoing)', 'Active', '2024-024', 2, 4, 1, 2),
+(94, '(Ongoing)', 'Active', '2024-026', 2, 4, 2, 3),
+(95, '(Ongoing)', 'Active', '2024-027', 2, 6, 1, 2),
+(96, '(Ongoing)', 'Active', '2024-028', 2, 2, 2, 3),
+(97, '(Ongoing)', 'Active', '2024-029', 2, 3, 2, 2),
+(98, '(Ongoing)', 'Active', '2024-030', 2, 6, 1, 2),
+(99, '(Ongoing)', 'Active', '2024-031', 2, 1, 2, 3),
+(100, '(Ongoing)', 'Active', '2024-032', 2, 3, 2, 2);
 
