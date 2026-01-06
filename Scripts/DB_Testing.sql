@@ -1,1 +1,170 @@
+DROP DATABASE IF EXISTS SAO_DB;
+CREATE SCHEMA IF NOT EXISTS SAO_DB;
+USE SAO_DB;
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`YEAR`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`YEAR` (
+  `ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`))
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`STUDENT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`STUDENT` (
+  `ID_Number` VARCHAR(8) NOT NULL,
+  `lastName` VARCHAR(30) NOT NULL DEFAULT " ",
+  `firstName` VARCHAR(30) NOT NULL DEFAULT " ",
+  `Section` VARCHAR(45) NOT NULL DEFAULT " ",
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `YEAR_ID` INT NOT NULL,
+  INDEX `lastName_index` (`lastName` ASC) VISIBLE,
+  PRIMARY KEY (`ID_Number`),
+  INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_STUDENT_YEAR1`
+    FOREIGN KEY (`YEAR_ID`)
+    REFERENCES `SAO_DB`.`YEAR` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`COURSE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`COURSE` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `Code` VARCHAR(7) NOT NULL DEFAULT " ",
+  `Name` VARCHAR(50) NOT NULL DEFAULT " ",
+  `Credit_Units` INT NOT NULL DEFAULT 3,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `Code_UNIQUE` (`Code` ASC) VISIBLE,
+  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE)
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`SEMESTER`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`SEMESTER` (
+  `ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`))
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`PROGRAM`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`PROGRAM` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `programName` VARCHAR(45) NOT NULL DEFAULT " ",
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE)
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`CURRICULUM`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`CURRICULUM` (
+  `PROGRAM_ID` INT NOT NULL,
+  `YEAR_ID` INT NOT NULL,
+  `SEMESTER_ID` INT NOT NULL,
+  `COURSE_ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`),
+  INDEX `fk_COURSE_SEMESTER_PROGRAM_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
+  INDEX `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1_idx` (`PROGRAM_ID` ASC) VISIBLE,
+  INDEX `fk_CURRICULUM_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1`
+    FOREIGN KEY (`PROGRAM_ID`)
+    REFERENCES `SAO_DB`.`PROGRAM` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_CURRICULUM_YEAR1`
+    FOREIGN KEY (`YEAR_ID`)
+    REFERENCES `SAO_DB`.`YEAR` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_SEMESTER1`
+    FOREIGN KEY (`SEMESTER_ID`)
+    REFERENCES `SAO_DB`.`SEMESTER` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_COURSE_SEMESTER_PROGRAM_COURSE1`
+    FOREIGN KEY (`COURSE_ID`)
+    REFERENCES `SAO_DB`.`COURSE` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`ENROLLMENT`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`ENROLLMENT` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `Grade` VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
+  `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `STUDENT_ID` VARCHAR(8) NOT NULL,
+  `CURRICULUM_SEMESTER_ID` INT NOT NULL,
+  `CURRICULUM_COURSE_ID` INT NOT NULL,
+  `CURRICULUM_PROGRAM_ID` INT NOT NULL,
+  `CURRICULUM_YEAR_ID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `fk_ENROLLMENT_STUDENT1_idx` (`STUDENT_ID` ASC) VISIBLE,
+  UNIQUE INDEX `unique_student_course_time` (`STUDENT_ID` ASC, `CURRICULUM_COURSE_ID` ASC, `CURRICULUM_YEAR_ID` ASC, `CURRICULUM_SEMESTER_ID` ASC),
+  INDEX `fk_ENROLLMENT_CURRICULUM1_idx` (`CURRICULUM_SEMESTER_ID` ASC, `CURRICULUM_COURSE_ID` ASC, `CURRICULUM_PROGRAM_ID` ASC, `CURRICULUM_YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_ENROLLMENT_STUDENT1`
+    FOREIGN KEY (`STUDENT_ID`)
+    REFERENCES `SAO_DB`.`STUDENT` (`ID_Number`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_ENROLLMENT_CURRICULUM1`
+    FOREIGN KEY (`CURRICULUM_SEMESTER_ID` , `CURRICULUM_COURSE_ID` , `CURRICULUM_PROGRAM_ID` , `CURRICULUM_YEAR_ID`)
+    REFERENCES `SAO_DB`.`CURRICULUM` (`PROGRAM_ID` , `YEAR_ID` , `SEMESTER_ID` , `COURSE_ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+
+-- -----------------------------------------------------
+-- Table `SAO_DB`.`COURSE_PREREQUISITE`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `SAO_DB`.`COURSE_PREREQUISITE` (
+  `PREREQUISITE_ID` INT NOT NULL,
+  `COURSE_ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Updated_At` DATETIME NOT NULL DEFAULT NOW(),
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT "registrar",
+  PRIMARY KEY (`PREREQUISITE_ID`, `COURSE_ID`),
+  INDEX `fk_COURSE_PREREQUISITE_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_PREREQUISITE_COURSE`
+    FOREIGN KEY (`PREREQUISITE_ID`)
+    REFERENCES `SAO_DB`.`COURSE` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_PARENT_COURSE`
+    FOREIGN KEY (`COURSE_ID`)
+    REFERENCES `SAO_DB`.`COURSE` (`ID`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+
+
 
