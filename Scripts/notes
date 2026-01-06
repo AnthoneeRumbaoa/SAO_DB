@@ -1,0 +1,53 @@
+/* notes from the 1st day presentation
+
+1st group: vet clinic
+intro about the project
+intro for team
+background of the company
+current business process
+the problem and effect
+requirements (3)
+solution
+entity relationship diagram
+
+questions:
+what services do they have?
+where do they store the service itself (where is it being saved)
+
+business rule
+demo of the script
+need to run from start to end (imagine that the client doesn't know what to do)
+constraints
+on delete cascade vs on delete restrict
+appointmentdate vs visitdate
+
+stored procedure
+how do they add a new pet
+
+------------------------------------------------------------------------------------------------------
+
+2nd group: city archive library
+the challenge
+business process
+the solution
+project timeline
+entity relationship diagram
+stored procedures
+functions
+trigger
+current limitation
+trigger
+demo of the script
+why id# instead of name when searching
+
+------------------------------------------------------------------------------------------------------
+
+3rd group: fit life gym
+executive summary
+business process
+the problem : 3 sub problems
+business rules and logic
+entity relationship diagram
+normalization: 1NF-3NF
+
+
