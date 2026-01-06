@@ -383,13 +383,25 @@ DELIMITER ;
 DELIMITER $$
 
 CREATE PROCEDURE StudentEnroll (
-    IN STUDENT_ID VARCHAR(8),
+    IN STUDENT_FNAME VARCHAR(45),
+    IN STUDENT_LNAME VARCHAR(45),
+    IN COURSE_NAME VARCHAR(50),
+    IN PROGRAM_NAME VARCHAR(45),
+    IN YEAR_ID INT,
     IN SEMESTER_ID INT,
-    IN COURSE_ID INT,
-    IN PROGRAM_ID INT,
-    IN YEAR_ID INT
+
+
+
 )
 BEGIN
+    DECLARE course_id INT;
+    DECLARE program_id INT;
+    DECLARE student_id VARCHAR(8);
+
+    SELECT ID INTO course_id FROM COURSE WHERE Name = COURSE_NAME;
+    SELECT ID INTO program_id FROM PROGRAM WHERE programName = PROGRAM_NAME;
+    SELECT ID INTO student_id FROM STUDENT WHERE firstName = STUDENT_FNAME AND lastName = STUDENT_LNAME;
+
     INSERT INTO ENROLLMENT (
         Grade,
         Status,
@@ -406,10 +418,10 @@ BEGIN
         'Active',
         'registrar',
         'registrar',
-        STUDENT_ID,
+        student_id,
         SEMESTER_ID,
-        COURSE_ID,
-        PROGRAM_ID,
+        course_id,
+        program_id,
         YEAR_ID
     );
 END $$
