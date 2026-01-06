@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS SAO_DB;
-CREATE DATABASE IF NOT EXISTS SAO_DB;
+CREATE SCHEMA IF NOT EXISTS SAO_DB;
 USE SAO_DB;
 
 -- -----------------------------------------------------
@@ -23,7 +23,8 @@ CREATE TABLE program (
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`));
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE);
 
 -- -----------------------------------------------------
 -- Table semester
@@ -48,7 +49,9 @@ CREATE TABLE course (
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`));
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `Code_UNIQUE` (`Code` ASC) VISIBLE,
+  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE);
 
 -- -----------------------------------------------------
 -- Table student
@@ -64,7 +67,9 @@ CREATE TABLE student (
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   YEAR_ID INT NOT NULL,
   PRIMARY KEY (`ID_Number`),
-  CONSTRAINT fk_student_year FOREIGN KEY (YEAR_ID) REFERENCES year (ID));
+  INDEX `lastName_index` (`lastName` ASC) VISIBLE,
+  INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_STUDENT_YEAR1` FOREIGN KEY (`YEAR_ID`) REFERENCES `year` (`ID`));
 
 -- -----------------------------------------------------
 -- Table curriculum
@@ -79,10 +84,13 @@ CREATE TABLE curriculum (
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   PRIMARY KEY (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID),
-  CONSTRAINT fk_curr_program FOREIGN KEY (PROGRAM_ID) REFERENCES program (ID),
-  CONSTRAINT fk_curr_year FOREIGN KEY (YEAR_ID) REFERENCES year (ID),
-  CONSTRAINT fk_curr_semester FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
-  CONSTRAINT fk_curr_course FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
+  INDEX `fk_COURSE_SEMESTER_PROGRAM_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
+  INDEX `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1_idx` (`PROGRAM_ID` ASC) VISIBLE,
+  INDEX `fk_CURRICULUM_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_CURR_PROGRAM` FOREIGN KEY (PROGRAM_ID) REFERENCES program (ID),
+  CONSTRAINT `fk_CURR_YEAR` FOREIGN KEY (YEAR_ID) REFERENCES year (ID),
+  CONSTRAINT `fk_CURR_SEMESTER` FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
+  CONSTRAINT `fk_CURR_COURSE` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
 -- -----------------------------------------------------
 -- Table enrollment
@@ -101,8 +109,11 @@ CREATE TABLE enrollment (
   CURRICULUM_SEMESTER_ID INT NOT NULL,
   CURRICULUM_COURSE_ID INT NOT NULL,
   PRIMARY KEY (ID),
-  CONSTRAINT fk_enroll_student FOREIGN KEY (STUDENT_ID) REFERENCES student (ID_Number),
-  CONSTRAINT fk_enroll_curr FOREIGN KEY (CURRICULUM_PROGRAM_ID, CURRICULUM_YEAR_ID, CURRICULUM_SEMESTER_ID, CURRICULUM_COURSE_ID) 
+  INDEX `fk_ENROLLMENT_STUDENT1_idx` (`STUDENT_ID` ASC) VISIBLE,
+  UNIQUE INDEX `unique_student_course_time` (`STUDENT_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_YEAR_ID`, `CURRICULUM_SEMESTER_ID`),
+  INDEX `fk_ENROLLMENT_CURRICULUM1_idx` (`CURRICULUM_SEMESTER_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_PROGRAM_ID`, `CURRICULUM_YEAR_ID`) VISIBLE,
+  CONSTRAINT `fk_enroll_student` FOREIGN KEY (STUDENT_ID) REFERENCES student (ID_Number),
+  CONSTRAINT `fk_enroll_curr` FOREIGN KEY (CURRICULUM_PROGRAM_ID, CURRICULUM_YEAR_ID, CURRICULUM_SEMESTER_ID, CURRICULUM_COURSE_ID) 
     REFERENCES curriculum (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID));
 
 -- -----------------------------------------------------
@@ -116,8 +127,9 @@ CREATE TABLE course_prerequisite (
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   PRIMARY KEY (PREREQUISITE_ID, COURSE_ID),
-  CONSTRAINT fk_pre_course FOREIGN KEY (PREREQUISITE_ID) REFERENCES course (ID),
-  CONSTRAINT fk_parent_course FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
+  INDEX `fk_COURSE_PREREQUISITE_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_pre_course` FOREIGN KEY (PREREQUISITE_ID) REFERENCES course (ID),
+  CONSTRAINT `fk_parent_course` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
 -- -----------------------------------------------------
 -- Base Setup (Years, Programs, Semesters)
@@ -278,3 +290,256 @@ INSERT INTO `ENROLLMENT` (`ID`, `Grade`, `Status`, `STUDENT_ID`, `CURRICULUM_SEM
 (99, '(Ongoing)', 'Active', '2024-031', 2, 1, 2, 3),
 (100, '(Ongoing)', 'Active', '2024-032', 2, 3, 2, 2);
 
+-- helper function for calcGWA
+DELIMITER //
+ 
+CREATE FUNCTION GetNumericGrade (p_grade VARCHAR(9))
+RETURNS DECIMAL(3,2)
+DETERMINISTIC
+BEGIN
+    -- Map R and F to 0 for GWA calculation
+    IF p_grade = 'F' OR p_grade = 'R' OR p_grade IS NULL THEN
+        RETURN 0.00;
+    -- Return decimal value if numeric
+    ELSEIF (p_grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
+        RETURN CAST(p_grade AS DECIMAL(3,2));
+    ELSE
+        RETURN 0.00;
+    END IF;
+END //
+ 
+DELIMITER ;
+
+-- CALC GWA
+
+DELIMITER //
+
+CREATE FUNCTION calcGWA (
+    p_student_id VARCHAR(8)
+)
+RETURNS DECIMAL(5,2)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_total_units INT DEFAULT 0;
+    DECLARE v_weighted_sum DECIMAL(12,2) DEFAULT 0.00;
+
+    SELECT 
+        SUM(cr.Credit_Units), 
+        SUM(GetNumericGrade(enr.Grade) * cr.Credit_Units)
+    INTO v_total_units, v_weighted_sum
+    FROM ENROLLMENT enr 
+    JOIN COURSE cr ON enr.CURRICULUM_COURSE_ID = cr.ID
+    WHERE enr.STUDENT_ID = p_student_id
+      AND enr.Grade != '(Ongoing)';
+
+    IF v_total_units > 0 THEN
+        RETURN v_weighted_sum / v_total_units;
+    ELSE
+        RETURN 0.00;
+    END IF;
+END //
+
+DELIMITER ;
+
+-- Adding a Student
+DELIMITER $$
+
+CREATE PROCEDURE AddStudent (
+    IN ID_Number VARCHAR(8),
+    IN lastName VARCHAR(30),
+    IN firstName VARCHAR(30),
+    IN Section VARCHAR(45),
+    IN Year INT
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM STUDENT WHERE STUDENT.ID_Number = ID_Number
+    ) THEN
+        INSERT INTO STUDENT (
+            ID_Number,
+            lastName,
+            firstName,
+            Section,
+            Created_By,
+            Updated_By,
+            YEAR_ID
+        )
+        VALUES (
+            ID_Number,
+            lastName,
+            firstName,
+            Section,
+            'registrar',
+            'registrar',
+            Year
+        );
+    END IF;
+END $$
+
+DELIMITER ;
+
+--Enrolling a student into a subject
+DELIMITER $$
+
+CREATE PROCEDURE StudentEnroll (
+    IN STUDENT_ID VARCHAR(8),
+    IN SEMESTER_ID INT,
+    IN COURSE_ID INT,
+    IN PROGRAM_ID INT,
+    IN YEAR_ID INT
+)
+BEGIN
+    INSERT INTO ENROLLMENT (
+        Grade,
+        Status,
+        Created_By,
+        Updated_By,
+        STUDENT_ID,
+        CURRICULUM_SEMESTER_ID,
+        CURRICULUM_COURSE_ID,
+        CURRICULUM_PROGRAM_ID,
+        CURRICULUM_YEAR_ID
+    )
+    VALUES (
+        '(Ongoing)',
+        'Active',
+        'registrar',
+        'registrar',
+        STUDENT_ID,
+        SEMESTER_ID,
+        COURSE_ID,
+        PROGRAM_ID,
+        YEAR_ID
+    );
+END $$
+
+DELIMITER ;
+
+--Updates Student grade status
+DELIMITER $$
+
+CREATE PROCEDURE GradeUpdate (
+    IN p_ENROLLMENT_ID INT,
+    IN p_RawGrade INT -- Input scale 1-100
+)
+BEGIN
+    DECLARE v_ConvertedGrade DECIMAL(3,2);
+
+    -- Convert 100-point scale to 4-point scale (Decimal)
+    SET v_ConvertedGrade = CASE 
+        WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
+        WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
+        WHEN p_RawGrade BETWEEN 87 AND 90  THEN 3.00
+        WHEN p_RawGrade BETWEEN 83 AND 86  THEN 2.50
+        WHEN p_RawGrade BETWEEN 79 AND 82  THEN 2.00
+        WHEN p_RawGrade BETWEEN 75 AND 78  THEN 1.50
+        WHEN p_RawGrade BETWEEN 70 AND 74  THEN 1.00
+        ELSE 0.00 -- Trigger will see 0.00 and set Status to 'Failed'
+    END;
+
+    -- Update the Enrollment record
+    -- The Trigger 'AutoUpdateStatus' will automatically set the Status column
+    UPDATE ENROLLMENT
+    SET
+        Grade = CAST(v_ConvertedGrade AS CHAR),
+        Updated_At = NOW(),
+        Updated_By = 'registrar'
+    WHERE ID = p_ENROLLMENT_ID;
+END $$
+
+DELIMITER ;
+
+--Viewing Student academic records
+DELIMITER $$
+
+CREATE PROCEDURE StudentEnrollmentsViewer (
+    IN STUDENT_ID VARCHAR(8)
+)
+BEGIN
+    SELECT
+        STUDENT.ID_Number,
+        STUDENT.firstName,
+        STUDENT.lastName,
+        COURSE.Code,
+        COURSE.Name AS Course,
+        ENROLLMENT.Grade,
+        ENROLLMENT.Status
+    FROM ENROLLMENT
+    JOIN STUDENT
+        ON ENROLLMENT.STUDENT_ID = STUDENT.ID_Number
+    JOIN COURSE
+        ON ENROLLMENT.CURRICULUM_COURSE_ID = COURSE.ID
+    WHERE STUDENT.ID_Number = STUDENT_ID;
+END $$
+
+DELIMITER ;
+
+-- CHECK PREREQUISITE TRIGGER
+DELIMITER //
+
+CREATE TRIGGER CheckPrerequisite
+BEFORE INSERT ON ENROLLMENT
+FOR EACH ROW
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM COURSE_PREREQUISITE 
+        WHERE COURSE_ID = NEW.CURRICULUM_COURSE_ID
+    ) THEN
+        IF EXISTS (
+            SELECT 1 
+            FROM COURSE_PREREQUISITE cp
+            WHERE cp.COURSE_ID = NEW.CURRICULUM_COURSE_ID
+              AND cp.PREREQUISITE_ID NOT IN (
+                  SELECT CURRICULUM_COURSE_ID
+                  FROM ENROLLMENT 
+                  WHERE STUDENT_ID = NEW.STUDENT_ID
+                    AND Status = 'Passed'
+              )
+        ) THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Enrollment Denied: Missing required prerequisites.';
+        END IF;
+    END IF;
+END 
+// DELIMITER ;
+
+
+DELIMITER //
+ 
+CREATE TRIGGER AutoUpdateStatus
+BEFORE UPDATE ON ENROLLMENT
+FOR EACH ROW
+BEGIN
+    DECLARE v_grade_val DECIMAL(3,2);
+ 
+    IF (NEW.Grade <=> OLD.Grade) = 0 THEN 
+        IF NEW.Grade = 'F' OR NEW.Grade = 'R' THEN
+            SET NEW.Status = 'Failed';
+        ELSEIF (NEW.Grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
+            SET v_grade_val = CAST(NEW.Grade AS DECIMAL(3,2));
+            IF v_grade_val >= 1.00 THEN
+                SET NEW.Status = 'Passed';
+            ELSE
+                SET NEW.Status = 'Failed';
+            END IF;
+        ELSE
+            SET NEW.Status = 'Active';
+        END IF;
+    END IF;
+END //
+ 
+DELIMITER ;
+
+CREATE VIEW studentTranscripts AS
+SELECT 
+    e.ID AS Enrollment_ID,
+    s.ID_Number,
+    CONCAT(s.lastName, ', ', s.firstName) AS Student_Name,
+    c.Code AS Course_Code,
+    c.Name AS Course_Title,
+    e.Grade,
+    e.Status
+FROM ENROLLMENT e
+JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number
+JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID; 
