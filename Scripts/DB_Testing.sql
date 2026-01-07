@@ -322,7 +322,7 @@ BEGIN
     SELECT
         STUDENT.ID_Number,
         STUDENT.fullName AS 'Full Name',
-        STUDENT.YEAR,
+        STUDENT.YEAR_ID,
         ENROLLMENT.CURRICULUM_SEMESTER_ID,
         ENROLLMENT.CURRICULUM_PROGRAM_ID,
         COURSE.Code,
