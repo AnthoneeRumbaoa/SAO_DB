@@ -488,6 +488,37 @@ SELECT
 FROM ENROLLMENT e
 JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number
 JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID; 
+
+/*VIEW FOR DEANS LISTERS*/
+CREATE VIEW deansList AS
+SELECT 
+    s.ID_Number, 
+    s.firstName, 
+    s.lastName, 
+    calcGWA(s.ID_Number) AS GWA,
+    SUM(cr.Credit_Units) AS Total_Units
+FROM STUDENT s
+JOIN ENROLLMENT enr ON s.ID_Number = enr.STUDENT_ID
+JOIN COURSE cr ON enr.CURRICULUM_COURSE_ID = cr.ID
+WHERE 
+    -- Exclude students who have any single grade lower than 2.00, or an R/F
+    NOT EXISTS (
+        SELECT 1 
+        FROM ENROLLMENT e2 
+        WHERE e2.STUDENT_ID = s.ID_Number 
+        AND (
+            GetNumericGrade(e2.Grade) < 2.00 
+            OR e2.Grade IN ('R', 'F')
+        )
+    )
+    -- Only consider completed courses for the unit count
+    AND enr.Grade != '(Ongoing)'
+GROUP BY s.ID_Number
+HAVING 
+    -- GWA must be at least 3.50
+    GWA >= 3.50 
+    -- Total units taken must be 15 or more
+    AND Total_Units >= 15;
 -- VIEW END --
 
 -- INSERT INTO BEGIN --
