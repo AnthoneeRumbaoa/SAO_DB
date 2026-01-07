@@ -322,9 +322,9 @@ BEGIN
     SELECT
         STUDENT.ID_Number,
         STUDENT.fullName AS 'Full Name',
-        STUDENT.YEAR_ID,
-        ENROLLMENT.CURRICULUM_SEMESTER_ID,
-        ENROLLMENT.CURRICULUM_PROGRAM_ID,
+        STUDENT.YEAR_ID AS 'Year',
+        ENROLLMENT.CURRICULUM_SEMESTER_ID AS 'Semester',
+        ENROLLMENT.CURRICULUM_PROGRAM_ID AS 'Program',
         COURSE.Code,
         COURSE.Name AS Course,
         ENROLLMENT.Grade,
