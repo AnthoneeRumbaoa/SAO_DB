@@ -131,3 +131,19 @@ END $$
 
 DELIMITER ;
 
+
+--USAGE EXAMPLES
+-- Add a new Year 2 student to the system
+CALL AddStudent('2024-037', 'Reyes', 'Marie Tessa', 'A', 2);
+
+-- Enroll student 2024-001 in Database Management 2
+-- Semester 2, BSIT Program, Year 2
+CALL StudentEnroll('2024-001', 2, 6, 2, 2);
+
+-- Update enrollment record #77 with a raw grade of 89
+CALL GradeUpdate(77, 89);
+
+-- View all enrollments, grades, and statuses of student 2024-001
+CALL StudentEnrollmentsViewer('2024-001');
+
+
