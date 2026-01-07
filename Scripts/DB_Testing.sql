@@ -242,7 +242,11 @@ CREATE PROCEDURE AddProgram(
   IN new_PROGRAM_NAME VARCHAR(45)
 )
   BEGIN
-      INSERT INTO PROGRAM (programName) VALUES (new_PROGRAM_NAME);
+      IF NOT EXISTS (
+        SELECT 1 FROM PROGRAM WHERE PROGRAM.programName = new_PROGRAM_NAME
+      ) THEN
+          INSERT INTO PROGRAM (programName) VALUES (new_PROGRAM_NAME);
+      END IF;
   END $$
 DELIMITER ;
 
@@ -262,18 +266,26 @@ CREATE PROCEDURE AddCurriculum (
         SELECT ID INTO entry_PROGRAM_ID FROM PROGRAM p WHERE p.programName = entry_PROGRAM_NAME;
         SELECT ID INTO entry_COURSE_ID FROM COURSE c WHERE c.Code = entry_COURSE_CODE;
 
-        INSERT INTO CURRICULUM (
-            PROGRAM_ID, 
-            YEAR_ID, 
-            SEMESTER_ID, 
-            COURSE_ID
-        )
-        VALUES (
-            entry_PROGRAM_ID,
-            entry_YEAR,
-            entry_SEMESTER,
-            entry_COURSE_ID
-        );
+      IF NOT EXISTS (
+        SELECT 1 FROM CURRICULUM 
+        WHERE CURRICULUM.PROGRAM_ID = entry_PROGRAM_ID
+        AND CURRICULUM.YEAR_ID = entry_YEAR
+        AND CURRICULUM.SEMESTER_ID = entry_SEMESTER
+        AND CURRICULUM.COURSE_ID = entry_COURSE_ID
+      ) THEN
+          INSERT INTO CURRICULUM (
+              PROGRAM_ID, 
+              YEAR_ID, 
+              SEMESTER_ID, 
+              COURSE_ID
+          )
+          VALUES (
+              entry_PROGRAM_ID,
+              entry_YEAR,
+              entry_SEMESTER,
+              entry_COURSE_ID
+          );
+        END IF;
     END $$
 DELIMITER ;
 
