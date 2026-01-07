@@ -328,27 +328,28 @@ DELIMITER $$
 
 CREATE PROCEDURE GradeUpdate (
     IN p_Student_Fullname VARCHAR(60),
-    IN p_Student_Section VARCHAR(45),
     IN p_Course_Code VARCHAR(7),
+    IN p_Year_ID INT,      -- Added to identify the specific year
+    IN p_Semester_ID INT,  -- Added to identify the specific semester
     IN p_RawGrade INT 
 )
 BEGIN
     DECLARE v_ConvertedGrade DECIMAL(3,2);
     DECLARE v_Enrollment_ID INT DEFAULT NULL;
 
-    -- Look for the SPECIFIC enrollment that is currently 'Ongoing'
+    -- Find the specific enrollment record for that exact time period
     SELECT e.ID INTO v_Enrollment_ID 
     FROM ENROLLMENT e
     JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number 
     JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID
     WHERE s.fullName = p_Student_Fullname 
       AND c.Code = p_Course_Code
-      AND s.Section = p_Student_Section
-      AND e.Grade = '(Ongoing)' -- Ensure we only update the active attempt
+      AND e.CURRICULUM_YEAR_ID = p_Year_ID
+      AND e.CURRICULUM_SEMESTER_ID = p_Semester_ID
     LIMIT 1; 
 
     IF v_Enrollment_ID IS NOT NULL THEN
-        -- Grade Conversion Logic...
+        -- Standard Conversion Logic
         SET v_ConvertedGrade = CASE 
             WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
             WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
@@ -365,8 +366,12 @@ BEGIN
             Updated_At = NOW(),
             Updated_By = 'registrar'
         WHERE ID = v_Enrollment_ID;
+    ELSE
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Record not found for this Student, Course, Year, and Semester.';
     END IF;
 END $$
+
 DELIMITER ;
   
 /* STORED PROCEDURE FOR VIEWING STUDENT ENROLLMENTS */
