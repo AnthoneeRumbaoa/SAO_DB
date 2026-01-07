@@ -209,6 +209,75 @@ END $$
 
 DELIMITER ;
 
+/*STORED PROCEDURE FOR ADDING A COURSE*/
+DELIMITER $$
+
+CREATE PROCEDURE AddCourse (
+  IN new_COURSE_NAME VARCHAR(50),
+  IN new_COURSE_CODE VARCHAR(7),
+  IN new_COURSE_UNITS INT
+)
+BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM COURSE WHERE COURSE.Name = new_COURSE_NAME OR COURSE.Code = new_COURSE_CODE
+  ) THEN
+      INSERT INTO COURSE (
+          Code,
+          Name,
+          Credit_Units
+      )
+      VALUES (
+          new_COURSE_CODE,
+          new_COURSE_NAME,
+          new_COURSE_UNITS
+      );
+    END IF;
+END $$
+DELIMITER ;
+
+/*STORED PROCEDURE FOR ADDING A PROGRAM*/
+DELIMITER $$
+
+CREATE PROCEDURE AddProgram(
+  IN new_PROGRAM_NAME VARCHAR(45)
+)
+  BEGIN
+      INSERT INTO PROGRAM (programName) VALUES (new_PROGRAM_NAME);
+  END $$
+DELIMITER ;
+
+/*STORED PROCEDURE FOR ADDING A NEW CURRICULUM ENTRY*/
+DELIMITER $$
+
+CREATE PROCEDURE AddCurriculum (
+    IN entry_PROGRAM_NAME VARCHAR(45),
+    IN entry_YEAR INT,
+    IN entry_SEMESTER INT,
+    IN entry_COURSE_CODE VARCHAR(7)
+)
+    BEGIN
+        DECLARE entry_PROGRAM_ID INT;
+        DECLARE entry_COURSE_ID INT;
+    
+        SELECT ID INTO entry_PROGRAM_ID FROM PROGRAM p WHERE p.programName = entry_PROGRAM_NAME;
+        SELECT ID INTO entry_COURSE_ID FROM COURSE c WHERE c.Code = entry_COURSE_CODE;
+
+        INSERT INTO CURRICULUM (
+            PROGRAM_ID, 
+            YEAR_ID, 
+            SEMESTER_ID, 
+            COURSE_ID
+        )
+        VALUES (
+            entry_PROGRAM_ID,
+            entry_YEAR,
+            entry_SEMESTER,
+            entry_COURSE_ID
+        );
+    END $$
+DELIMITER ;
+
+
 /* STORED PROCEDURE FOR ENROLLING A STUDENT */
 DELIMITER $$
 
@@ -298,7 +367,7 @@ BEGIN
         WHERE ID = v_Enrollment_ID;
     END IF;
 END $$
-DELIMITER 
+DELIMITER ;
   
 /* STORED PROCEDURE FOR VIEWING STUDENT ENROLLMENTS */
 DELIMITER $$
