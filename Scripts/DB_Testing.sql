@@ -329,15 +329,20 @@ DELIMITER $$
 CREATE PROCEDURE GradeUpdate (
     IN p_Student_Fullname VARCHAR(60),
     IN p_Course_Code VARCHAR(7),
-    IN p_Year_ID INT,      -- Added to identify the specific year
-    IN p_Semester_ID INT,  -- Added to identify the specific semester
-    IN p_RawGrade INT 
+    IN p_Year_ID INT,      
+    IN p_Semester_ID INT,  
+    IN p_RawGrade VARCHAR(9) -- Changed to VARCHAR(9)
 )
 BEGIN
-    DECLARE v_ConvertedGrade DECIMAL(3,2);
+    DECLARE v_FinalGrade CHAR(9);
+    DECLARE v_NumericGrade INT;
     DECLARE v_Enrollment_ID INT DEFAULT NULL;
 
-    -- Find the specific enrollment record for that exact time period
+    IF NOT (p_RawGrade REGEXP '^(\(Ongoing\)|R|F)$' OR p_RawGrade REGEXP '^([1-9]|[1-9][0-9]|100)$') THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid Grade Input. Allowed: (Ongoing), R, F, or 1-100.';
+    END IF;
+
     SELECT e.ID INTO v_Enrollment_ID 
     FROM ENROLLMENT e
     JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number 
@@ -349,23 +354,29 @@ BEGIN
     LIMIT 1; 
 
     IF v_Enrollment_ID IS NOT NULL THEN
-        -- Standard Conversion Logic
-        SET v_ConvertedGrade = CASE 
-            WHEN p_RawGrade BETWEEN 95 AND 100 THEN 4.00
-            WHEN p_RawGrade BETWEEN 91 AND 94  THEN 3.50
-            WHEN p_RawGrade BETWEEN 87 AND 90  THEN 3.00
-            WHEN p_RawGrade BETWEEN 83 AND 86  THEN 2.50
-            WHEN p_RawGrade BETWEEN 79 AND 82  THEN 2.00
-            WHEN p_RawGrade BETWEEN 75 AND 78  THEN 1.50
-            WHEN p_RawGrade BETWEEN 70 AND 74  THEN 1.00
-            ELSE 0.00 
-        END;
+        IF p_RawGrade REGEXP '^([1-9]|[1-9][0-9]|100)$' THEN
+            SET v_NumericGrade = CAST(p_RawGrade AS UNSIGNED);
+            
+            SET v_FinalGrade = CASE 
+                WHEN v_NumericGrade BETWEEN 95 AND 100 THEN '4.00'
+                WHEN v_NumericGrade BETWEEN 91 AND 94  THEN '3.50'
+                WHEN v_NumericGrade BETWEEN 87 AND 90  THEN '3.00'
+                WHEN v_NumericGrade BETWEEN 83 AND 86  THEN '2.50'
+                WHEN v_NumericGrade BETWEEN 79 AND 82  THEN '2.00'
+                WHEN v_NumericGrade BETWEEN 75 AND 78  THEN '1.50'
+                WHEN v_NumericGrade BETWEEN 70 AND 74  THEN '1.00'
+                ELSE '0.00' 
+            END;
+        ELSE
+            SET v_FinalGrade = p_RawGrade;
+        END IF;
 
         UPDATE ENROLLMENT
-        SET Grade = CAST(v_ConvertedGrade AS CHAR(4)),
+        SET Grade = v_FinalGrade,
             Updated_At = NOW(),
             Updated_By = 'registrar'
         WHERE ID = v_Enrollment_ID;
+        
     ELSE
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Record not found for this Student, Course, Year, and Semester.';
