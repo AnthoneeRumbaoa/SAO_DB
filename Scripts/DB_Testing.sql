@@ -319,7 +319,7 @@ CREATE PROCEDURE StudentEnrollmentsViewer (
 BEGIN
     SELECT
         STUDENT.ID_Number,
-        CONCAT(STUDENT.lastName, ', ', STUDENT.firstName) AS Student_FullName,
+        STUDENT.fullName AS 'Full Name',
         COURSE.Code,
         COURSE.Name AS Course,
         ENROLLMENT.Grade,
