@@ -1,11 +1,8 @@
-
 DROP DATABASE IF EXISTS SAO_DB;
 CREATE SCHEMA IF NOT EXISTS SAO_DB;
 USE SAO_DB;
 
--- -----------------------------------------------------
--- Table year
--- -----------------------------------------------------
+/* TABLE FOR ACADEMIC YEARS */
 CREATE TABLE year (
   ID INT NOT NULL,
   Created_At DATETIME NOT NULL DEFAULT NOW(),
@@ -14,9 +11,7 @@ CREATE TABLE year (
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   PRIMARY KEY (`ID`));
 
--- -----------------------------------------------------
--- Table program
--- -----------------------------------------------------
+/* TABLE FOR ACADEMIC PROGRAMS */
 CREATE TABLE program (
   ID INT NOT NULL AUTO_INCREMENT,
   programName VARCHAR(45) NOT NULL DEFAULT " ",
@@ -27,9 +22,7 @@ CREATE TABLE program (
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE);
 
--- -----------------------------------------------------
--- Table semester
--- -----------------------------------------------------
+/* TABLE FOR SEMESTERS */
 CREATE TABLE semester (
   ID INT NOT NULL,
   Created_At DATETIME NOT NULL DEFAULT NOW(),
@@ -38,9 +31,7 @@ CREATE TABLE semester (
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   PRIMARY KEY (`ID`));
 
--- -----------------------------------------------------
--- Table course
--- -----------------------------------------------------
+/* TABLE FOR COURSE CATALOG */
 CREATE TABLE course (
   ID INT NOT NULL AUTO_INCREMENT,
   Code VARCHAR(7) NOT NULL DEFAULT " ",
@@ -54,9 +45,7 @@ CREATE TABLE course (
   UNIQUE INDEX `Code_UNIQUE` (`Code` ASC) VISIBLE,
   UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE);
 
--- -----------------------------------------------------
--- Table student
--- -----------------------------------------------------
+/* TABLE FOR STUDENT MASTERLIST */
 CREATE TABLE student (
   ID_Number VARCHAR(8) NOT NULL,
   lastName VARCHAR(30) NOT NULL DEFAULT " ",
@@ -73,9 +62,7 @@ CREATE TABLE student (
   INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
   CONSTRAINT `fk_STUDENT_YEAR1` FOREIGN KEY (`YEAR_ID`) REFERENCES `year` (`ID`));
 
--- -----------------------------------------------------
--- Table curriculum
--- -----------------------------------------------------
+/* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
 CREATE TABLE curriculum (
   PROGRAM_ID INT NOT NULL,
   YEAR_ID INT NOT NULL,
@@ -94,9 +81,7 @@ CREATE TABLE curriculum (
   CONSTRAINT `fk_CURR_SEMESTER` FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
   CONSTRAINT `fk_CURR_COURSE` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
--- -----------------------------------------------------
--- Table enrollment
--- -----------------------------------------------------
+/* TABLE FOR STUDENT ENROLLMENT AND GRADING */
 CREATE TABLE enrollment (
   ID INT NOT NULL AUTO_INCREMENT,
   Grade VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
@@ -118,9 +103,7 @@ CREATE TABLE enrollment (
   CONSTRAINT `fk_enroll_curr` FOREIGN KEY (CURRICULUM_PROGRAM_ID, CURRICULUM_YEAR_ID, CURRICULUM_SEMESTER_ID, CURRICULUM_COURSE_ID) 
     REFERENCES curriculum (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID));
 
--- -----------------------------------------------------
--- Table course_prerequisite
--- -----------------------------------------------------
+/* TABLE FOR COURSE PREREQUISITES */
 CREATE TABLE course_prerequisite (
   PREREQUISITE_ID INT NOT NULL,
   COURSE_ID INT NOT NULL,
@@ -133,7 +116,7 @@ CREATE TABLE course_prerequisite (
   CONSTRAINT `fk_pre_course` FOREIGN KEY (PREREQUISITE_ID) REFERENCES course (ID),
   CONSTRAINT `fk_parent_course` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
--- helper function for calcGWA
+/* HELPER FUNCTION FOR GETNUMERICGRADE */
 DELIMITER //
  
 CREATE FUNCTION GetNumericGrade (p_grade VARCHAR(9))
@@ -153,8 +136,7 @@ END //
  
 DELIMITER ;
 
--- CALC GWA
-
+/* FUNCTION FOR CALCULATING GWA */
 DELIMITER //
 
 CREATE FUNCTION calcGWA (
@@ -185,7 +167,7 @@ END //
 
 DELIMITER ;
 
--- Adding a Student
+/* STORED PROCEDURE FOR ADDING A STUDENT */
 DELIMITER $$
 
 CREATE PROCEDURE AddStudent (
@@ -222,7 +204,7 @@ END $$
 
 DELIMITER ;
 
---Enrolling a student into a subject
+/* STORED PROCEDURE FOR ENROLLING A STUDENT */
 DELIMITER $$
 
 CREATE PROCEDURE StudentEnroll (
@@ -267,7 +249,7 @@ END $$
 
 DELIMITER ;
 
---Updates Student grade status
+/* STORED PROCEDURE FOR UPDATING GRADES */
 DELIMITER $$
 
 CREATE PROCEDURE GradeUpdate (
@@ -312,7 +294,8 @@ BEGIN
     END IF;
 END $$
 DELIMITER 
---Viewing Student academic records
+  
+/* STORED PROCEDURE FOR VIEWING STUDENT ENROLLMENTS */
 DELIMITER $$
 
 CREATE PROCEDURE StudentEnrollmentsViewer (
@@ -339,7 +322,7 @@ END $$
 
 DELIMITER ;
 
--- CHECK PREREQUISITE TRIGGER
+/* TRIGGER TO ENFORCE PREREQUISITE CHECKS */
 DELIMITER //
 
 CREATE TRIGGER CheckPrerequisite
@@ -370,7 +353,8 @@ END
 
 
 DELIMITER //
- 
+
+/* TRIGGER TO AUTOMATICALLY UPDATE STATUS BASED ON GRADE */
 CREATE TRIGGER AutoUpdateStatus
 BEFORE UPDATE ON ENROLLMENT
 FOR EACH ROW
@@ -395,6 +379,7 @@ END //
  
 DELIMITER ;
 
+/* VIEW FOR STUDENT TRANSCRIPTS */
 CREATE VIEW studentTranscripts AS
 SELECT 
     e.ID AS Enrollment_ID,
@@ -408,19 +393,14 @@ FROM ENROLLMENT e
 JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number
 JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID; 
 
-
--- -----------------------------------------------------
--- Base Setup (Years, Programs, Semesters)
--- -----------------------------------------------------
+/* BASE SETUP DATA */
 INSERT INTO `YEAR` (`ID`) VALUES (2), (3);
 
 INSERT INTO `PROGRAM` (`programName`) VALUES ('BSCS'), ('BSIT');
 
 INSERT INTO `SEMESTER` (`ID`) VALUES (1), (2);
 
--- -----------------------------------------------------
--- Student Master Records
--- -----------------------------------------------------
+/* STUDENT MASTER RECORDS */
 INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`, `YEAR_ID`) VALUES 
 ('2024-001', 'Abril', 'Sheryn Mae', 'A', 2),
 ('2024-002', 'Ananayo', 'Breneth Jian', 'A', 2),
@@ -459,8 +439,6 @@ INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`, `YEAR_ID
 ('2024-035', 'Whitwell', 'Daniel James', 'A', 3),
 ('2024-036', 'Mangulabnan', 'Edgardo Jr.', 'A', 3);
 
---------------------------------------------------------------------------------------------------------
-
 INSERT INTO `COURSE` (`ID`, `Code`, `Name`) VALUES 
 (1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
 (3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
@@ -468,6 +446,7 @@ INSERT INTO `COURSE` (`ID`, `Code`, `Name`) VALUES
 
 INSERT INTO `COURSE_PREREQUISITE` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
 
+/* CURRICULUM MAPPING */
 INSERT INTO `CURRICULUM` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
 (1, 2, 1, 5), (1, 2, 2, 2), (1, 2, 2, 3), (1, 2, 2, 4), (1, 2, 2, 6), (1, 3, 1, 1),
 (1, 3, 1, 5), (1, 3, 2, 2), (1, 3, 2, 5), (1, 3, 2, 6), (2, 2, 1, 1), (2, 2, 1, 3),
@@ -475,6 +454,7 @@ INSERT INTO `CURRICULUM` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) V
 (2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
 (2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
 
+/* ENROLLMENT RECORDS */
 -- INSERT INTO `ENROLLMENT` (`ID`, `Grade`, `Status`, `STUDENT_ID`, `CURRICULUM_SEMESTER_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_PROGRAM_ID`, `CURRICULUM_YEAR_ID`) VALUES
 -- (1, '92', 'Passed', '2024-001', 1, 1, 2, 2),
 -- (2, '70', 'Failed', '2024-002', 1, 1, 2, 2),
