@@ -268,6 +268,8 @@ END $$
 DELIMITER ;
 
 --Updates Student grade status
+DELIMITER $$
+
 CREATE PROCEDURE GradeUpdate (
     IN p_Student_Fullname VARCHAR(60),
     IN p_Student_Section VARCHAR(45),
@@ -309,7 +311,7 @@ BEGIN
         WHERE ID = v_Enrollment_ID;
     END IF;
 END $$
-  
+DELIMITER 
 --Viewing Student academic records
 DELIMITER $$
 
