@@ -131,3 +131,16 @@ END $$
 
 DELIMITER ;
 
+--USAGE EXAMPLE
+-- 1. Add a new student
+CALL AddStudent('2024-038', 'Reyes', 'Daniel', 'A', 3);
+
+-- 2. Enroll the student in a course
+CALL StudentEnroll('2024-038', 1, 5, 1, 3);
+
+-- 3. Update the student’s grade
+CALL GradeUpdate(101, 92);
+
+-- 4. View student records
+CALL StudentEnrollmentsViewer('2024-038');
+
