@@ -537,11 +537,11 @@ DELIMITER ;
 /* VIEW FOR STUDENT TRANSCRIPTS */
 CREATE VIEW studentTranscripts AS
 SELECT 
-    e.ID AS Enrollment_ID,
-    s.ID_Number,
-    CONCAT(s.lastName, ', ', s.firstName) AS Student_Name,
-    c.Code AS Course_Code,
-    c.Name AS Course_Title,
+    e.ID AS 'Enrollment ID',
+    s.ID_Number AS 'ID Number',
+    s.fullName AS 'Full Name',
+    c.Code AS 'Course Code',
+    c.Name AS 'Course Title',
     e.Grade,
     e.Status
 FROM ENROLLMENT e
@@ -551,9 +551,8 @@ JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID;
 /*VIEW FOR DEANS LISTERS*/
 CREATE VIEW deansList AS
 SELECT 
-    s.ID_Number, 
-    s.firstName, 
-    s.lastName, 
+    s.ID_Number AS 'ID Number', 
+    s.fullName AS 'Full Name', 
     calcGWA(s.ID_Number) AS GWA,
     SUM(cr.Credit_Units) AS Total_Units
 FROM STUDENT s
