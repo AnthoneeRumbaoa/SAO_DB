@@ -57,7 +57,6 @@ CREATE TABLE student (
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  YEAR_ID INT NOT NULL,
   PRIMARY KEY (`ID_Number`),
   INDEX `lastName_index` (`lastName` ASC) VISIBLE,
   INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
