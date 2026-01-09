@@ -409,7 +409,7 @@ BEGIN
         STUDENT.fullName AS 'Full Name',
         STUDENT.Date_Enrolled AS 'Date Enrolled',
         cu.SEMESTER_ID AS 'Semester',
-        YEAR.ID AS Year,
+        cu.YEAR_ID AS Year,
         PROGRAM.programName AS 'Program',
         COURSE.Code,
         COURSE.Name AS Course,
@@ -424,8 +424,6 @@ BEGIN
         ON cu.COURSE_ID = COURSE.ID
     JOIN PROGRAM
         ON cu.PROGRAM_ID = PROGRAM.ID
-    JOIN YEAR
-        ON cu.YEAR_ID = YEAR.ID
     WHERE STUDENT.ID_Number = STUDENT_ID;
 END $$
 
