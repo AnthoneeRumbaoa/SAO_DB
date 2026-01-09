@@ -409,6 +409,7 @@ BEGIN
         STUDENT.fullName AS 'Full Name',
         STUDENT.Date_Enrolled AS 'Date Enrolled',
         cu.SEMESTER_ID AS 'Semester',
+        YEAR.ID AS Year,
         PROGRAM.programName AS 'Program',
         COURSE.Code,
         COURSE.Name AS Course,
