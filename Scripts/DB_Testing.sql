@@ -58,8 +58,8 @@ CREATE TABLE student (
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   PRIMARY KEY (`ID_Number`),
-  INDEX `lastName_index` (`lastName` ASC) VISIBLE
-
+  INDEX `lastName_index` (`lastName` ASC) VISIBLE)
+  
 /* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
 CREATE TABLE curriculum (
   PROGRAM_ID INT NOT NULL,
@@ -177,7 +177,6 @@ CREATE PROCEDURE AddStudent (
     IN lastName VARCHAR(30),
     IN firstName VARCHAR(30),
     IN Section VARCHAR(45),
-    IN Year INT
 )
 BEGIN
     IF NOT EXISTS (
@@ -189,8 +188,7 @@ BEGIN
             firstName,
             Section,
             Created_By,
-            Updated_By,
-            YEAR_ID
+            Updated_By
         )
         VALUES (
             ID_Number,
@@ -199,7 +197,6 @@ BEGIN
             Section,
             'registrar',
             'registrar',
-            Year
         );
     END IF;
 END $$
