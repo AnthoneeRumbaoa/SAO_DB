@@ -53,7 +53,7 @@ CREATE TABLE student (
   firstName VARCHAR(30) NOT NULL DEFAULT " ",
   fullName varchar(60) GENERATED ALWAYS AS (CONCAT(firstName, ' ', lastName)) STORED,
   Section VARCHAR(45) NOT NULL DEFAULT " ",
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
+  Date_Enrolled DATETIME NOT NULL DEFAULT NOW(),
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
@@ -61,7 +61,6 @@ CREATE TABLE student (
   PRIMARY KEY (`ID_Number`),
   INDEX `lastName_index` (`lastName` ASC) VISIBLE,
   INDEX `fk_STUDENT_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_STUDENT_YEAR1` FOREIGN KEY (`YEAR_ID`) REFERENCES `year` (`ID`));
 
 /* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
 CREATE TABLE curriculum (
