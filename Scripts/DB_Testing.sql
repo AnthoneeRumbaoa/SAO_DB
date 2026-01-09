@@ -620,11 +620,13 @@ INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`) VALUES
 ('2024-035', 'Whitwell', 'Daniel James', 'A'),
 ('2024-036', 'Mangulabnan', 'Edgardo Jr.', 'A');
 
+/*COURSES*/
 INSERT INTO `COURSE` (`ID`, `Code`, `Name`) VALUES 
 (1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
 (3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
 (5, 'DATAMA1', 'Database Mgmt 1'), (6, 'DATAMA2', 'Database Mgmt 2');
 
+/*COURSE PREREQUISITES*/
 INSERT INTO `COURSE_PREREQUISITE` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
 
 /* CURRICULUM MAPPING */
@@ -634,30 +636,4 @@ INSERT INTO `CURRICULUM` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) V
 (2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
 (2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
 (2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
-
-/* ENROLLMENT RECORDS */
-INSERT INTO `ENROLLMENT` (`ID`, `Grade`, `Status`, `STUDENT_ID`, `CURRICULUM_SEMESTER_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_PROGRAM_ID`, `CURRICULUM_YEAR_ID`) VALUES
-(1, '92', 'Passed', '2024-001', 1, 1, 2, 2),
-(2, '70', 'Failed', '2024-002', 1, 1, 2, 2),
-(3, '85', 'Passed', '2024-003', 1, 5, 1, 2),
-(4, '76', 'Passed', '2024-006', 1, 3, 2, 3),
-(5, '90', 'Passed', '2024-013', 1, 1, 2, 3),
-(6, '95', 'Passed', '2024-014', 1, 5, 2, 2),
-(8, '88', 'Passed', '2024-016', 1, 1, 2, 3),
-(9, '78', 'Passed', '2024-017', 1, 3, 2, 2),
-(10, '80', 'Passed', '2024-018', 1, 1, 2, 2),
-(11, '91', 'Passed', '2024-019', 1, 5, 2, 3),
-(12, '72', 'Failed', '2024-020', 1, 1, 1, 3),
-(13, '85', 'Passed', '2024-021', 1, 5, 2, 2),
-(14, '90', 'Passed', '2024-022', 1, 3, 2, 2),
-(15, '75', 'Passed', '2024-023', 1, 1, 2, 3),
-(16, '89', 'Passed', '2024-024', 1, 5, 1, 2),
-(18, '94', 'Passed', '2024-026', 1, 3, 2, 3),
-(19, '77', 'Passed', '2024-027', 1, 5, 1, 2),
-(20, '93', 'Passed', '2024-028', 1, 1, 2, 3),
-(21, '88', 'Passed', '2024-001', 2, 2, 2, 2),
-(22, '84', 'Passed', '2024-003', 2, 6, 1, 2),
-(23, '92', 'Passed', '2024-006', 2, 4, 2, 3),
-(24, '78', 'Passed', '2024-014', 2, 6, 2, 2),
-(25, '82', 'Passed', '2024-016', 2, 2, 2, 3);
 -- INSERT INTO END --
