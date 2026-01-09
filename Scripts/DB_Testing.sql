@@ -62,6 +62,7 @@ CREATE TABLE student (
   
 /* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
 CREATE TABLE curriculum (
+  ID INT NOT NULL AUTO_INCREMENT, 
   PROGRAM_ID INT NOT NULL,
   YEAR_ID INT NOT NULL,
   SEMESTER_ID INT NOT NULL,
@@ -70,10 +71,8 @@ CREATE TABLE curriculum (
   Updated_At DATETIME NOT NULL DEFAULT NOW(),
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID),
-  INDEX `fk_COURSE_SEMESTER_PROGRAM_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
-  INDEX `fk_COURSE_SEMESTER_PROGRAM_PROGRAM1_idx` (`PROGRAM_ID` ASC) VISIBLE,
-  INDEX `fk_CURRICULUM_YEAR1_idx` (`YEAR_ID` ASC) VISIBLE,
+  PRIMARY KEY (ID),
+  UNIQUE INDEX `unique_curriculum_idx` (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID),
   CONSTRAINT `fk_CURR_PROGRAM` FOREIGN KEY (PROGRAM_ID) REFERENCES program (ID),
   CONSTRAINT `fk_CURR_YEAR` FOREIGN KEY (YEAR_ID) REFERENCES year (ID),
   CONSTRAINT `fk_CURR_SEMESTER` FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
@@ -89,17 +88,11 @@ CREATE TABLE enrollment (
   Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
   STUDENT_ID VARCHAR(8) NOT NULL,
-  CURRICULUM_PROGRAM_ID INT NOT NULL,
-  CURRICULUM_YEAR_ID INT NOT NULL,
-  CURRICULUM_SEMESTER_ID INT NOT NULL,
-  CURRICULUM_COURSE_ID INT NOT NULL,
+  CURRICULUM_ID INT NOT NULL, 
   PRIMARY KEY (ID),
-  INDEX `fk_ENROLLMENT_STUDENT1_idx` (`STUDENT_ID` ASC) VISIBLE,
-  UNIQUE INDEX `unique_student_course_time` (`STUDENT_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_YEAR_ID`, `CURRICULUM_SEMESTER_ID`),
-  INDEX `fk_ENROLLMENT_CURRICULUM1_idx` (`CURRICULUM_SEMESTER_ID`, `CURRICULUM_COURSE_ID`, `CURRICULUM_PROGRAM_ID`, `CURRICULUM_YEAR_ID`) VISIBLE,
+  UNIQUE INDEX `unique_student_curr` (`STUDENT_ID`, `CURRICULUM_ID`),
   CONSTRAINT `fk_enroll_student` FOREIGN KEY (STUDENT_ID) REFERENCES student (ID_Number),
-  CONSTRAINT `fk_enroll_curr` FOREIGN KEY (CURRICULUM_PROGRAM_ID, CURRICULUM_YEAR_ID, CURRICULUM_SEMESTER_ID, CURRICULUM_COURSE_ID) 
-    REFERENCES curriculum (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID));
+  CONSTRAINT `fk_enroll_curr_id` FOREIGN KEY (CURRICULUM_ID) REFERENCES curriculum (ID));
 
 /* TABLE FOR COURSE PREREQUISITES */
 CREATE TABLE course_prerequisite (
@@ -295,36 +288,28 @@ CREATE PROCEDURE StudentEnroll (
     IN SEMESTER_ID INT
 )
 BEGIN
-    DECLARE course_id INT;
-    DECLARE program_id INT;
-    DECLARE student_id VARCHAR(8);
+    DECLARE v_student_id VARCHAR(8);
+    DECLARE v_curr_id INT;
 
-    SELECT ID INTO course_id FROM COURSE WHERE Code = COURSE_CODE;
-    SELECT ID INTO program_id FROM PROGRAM WHERE programName = PROGRAM_NAME;
-    SELECT ID_Number INTO student_id FROM STUDENT WHERE fullName = STUDENT_FULLNAME;
+    -- Look up the student ID
+    SELECT ID_Number INTO v_student_id FROM STUDENT WHERE fullName = STUDENT_FULLNAME;
 
-    INSERT INTO ENROLLMENT (
-        Grade,
-        Status,
-        Created_By,
-        Updated_By,
-        STUDENT_ID,
-        CURRICULUM_SEMESTER_ID,
-        CURRICULUM_COURSE_ID,
-        CURRICULUM_PROGRAM_ID,
-        CURRICULUM_YEAR_ID
-    )
-    VALUES (
-        '(Ongoing)',
-        'Active',
-        'registrar',
-        'registrar',
-        student_id,
-        SEMESTER_ID,
-        course_id,
-        program_id,
-        YEAR_ID
-    );
+    -- Look up the specific Curriculum ID based on the parameters
+    SELECT curr.ID INTO v_curr_id 
+    FROM curriculum curr
+    JOIN program p ON curr.PROGRAM_ID = p.ID
+    JOIN course c ON curr.COURSE_ID = c.ID
+    WHERE p.programName = PROGRAM_NAME 
+      AND c.Code = COURSE_CODE 
+      AND curr.YEAR_ID = YEAR_ID 
+      AND curr.SEMESTER_ID = SEMESTER_ID;
+
+    IF v_curr_id IS NOT NULL THEN
+        INSERT INTO ENROLLMENT (Grade, Status, STUDENT_ID, CURRICULUM_ID)
+        VALUES ('(Ongoing)', 'Active', v_student_id, v_curr_id);
+    ELSE
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Curriculum entry not found.';
+    END IF;
 END $$
 
 DELIMITER ;
@@ -476,28 +461,27 @@ CREATE TRIGGER CheckPrerequisite
 BEFORE INSERT ON ENROLLMENT
 FOR EACH ROW
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM COURSE_PREREQUISITE 
-        WHERE COURSE_ID = NEW.CURRICULUM_COURSE_ID
-    ) THEN
+    DECLARE v_course_id INT;
+    SELECT COURSE_ID INTO v_course_id FROM curriculum WHERE ID = NEW.CURRICULUM_ID;
+
+    IF EXISTS (SELECT 1 FROM COURSE_PREREQUISITE WHERE COURSE_ID = v_course_id) THEN
         IF EXISTS (
             SELECT 1 
             FROM COURSE_PREREQUISITE cp
-            WHERE cp.COURSE_ID = NEW.CURRICULUM_COURSE_ID
+            WHERE cp.COURSE_ID = v_course_id
               AND cp.PREREQUISITE_ID NOT IN (
-                  SELECT CURRICULUM_COURSE_ID
-                  FROM ENROLLMENT 
-                  WHERE STUDENT_ID = NEW.STUDENT_ID
-                    AND Status = 'Passed'
+                  SELECT c.COURSE_ID 
+                  FROM ENROLLMENT e
+                  JOIN curriculum c ON e.CURRICULUM_ID = c.ID
+                  WHERE e.STUDENT_ID = NEW.STUDENT_ID AND e.Status = 'Passed'
               )
         ) THEN
-            SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'Enrollment Denied: Missing required prerequisites.';
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Missing required prerequisites.';
         END IF;
     END IF;
-END 
-// DELIMITER ;
+END //
 
+DELIMITER ;
 
 DELIMITER //
 
