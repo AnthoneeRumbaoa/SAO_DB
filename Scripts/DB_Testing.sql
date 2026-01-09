@@ -62,7 +62,7 @@ CREATE TABLE student (
   
 /* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
 CREATE TABLE curriculum (
-  ID INT NOT NULL AUTO_INCREMENT, 
+  ID INT NOT NULL AUTO_INCREMENT,
   PROGRAM_ID INT NOT NULL,
   YEAR_ID INT NOT NULL,
   SEMESTER_ID INT NOT NULL,
@@ -116,10 +116,8 @@ CREATE FUNCTION GetNumericGrade (p_grade VARCHAR(9))
 RETURNS DECIMAL(3,2)
 DETERMINISTIC
 BEGIN
-    -- Map R and F to 0 for GWA calculation
     IF p_grade = 'F' OR p_grade = 'R' OR p_grade IS NULL THEN
         RETURN 0.00;
-    -- Return decimal value if numeric
     ELSEIF (p_grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
         RETURN CAST(p_grade AS DECIMAL(3,2));
     ELSE
@@ -147,7 +145,8 @@ BEGIN
         SUM(GetNumericGrade(enr.Grade) * cr.Credit_Units)
     INTO v_total_units, v_weighted_sum
     FROM ENROLLMENT enr 
-    JOIN COURSE cr ON enr.CURRICULUM_COURSE_ID = cr.ID
+    JOIN CURRICULUM cu ON enr.CURRICULUM_ID = cu.ID
+    JOIN COURSE cr ON cu.COURSE_ID = cr.ID
     WHERE enr.STUDENT_ID = p_student_id
       AND enr.Grade != '(Ongoing)';
 
@@ -280,35 +279,60 @@ DELIMITER ;
 /* STORED PROCEDURE FOR ENROLLING A STUDENT */
 DELIMITER $$
 
+/* STORED PROCEDURE FOR ENROLLING A STUDENT (PRECISION VERSION) */
+DELIMITER $$
+
 CREATE PROCEDURE StudentEnroll (
     IN STUDENT_FULLNAME VARCHAR(60),
     IN COURSE_CODE VARCHAR(50),
     IN PROGRAM_NAME VARCHAR(45),
-    IN YEAR_ID INT,
-    IN SEMESTER_ID INT
+    IN p_YEAR_ID INT,
+    IN p_SEMESTER_ID INT
 )
 BEGIN
     DECLARE v_student_id VARCHAR(8);
     DECLARE v_curr_id INT;
 
-    -- Look up the student ID
-    SELECT ID_Number INTO v_student_id FROM STUDENT WHERE fullName = STUDENT_FULLNAME;
+    SELECT ID_Number INTO v_student_id 
+    FROM student 
+    WHERE fullName = STUDENT_FULLNAME 
+    LIMIT 1;
 
-    -- Look up the specific Curriculum ID based on the parameters
     SELECT curr.ID INTO v_curr_id 
-    FROM curriculum curr
-    JOIN program p ON curr.PROGRAM_ID = p.ID
+    FROM curriculum curr 
+    JOIN program p ON curr.PROGRAM_ID = p.ID 
     JOIN course c ON curr.COURSE_ID = c.ID
     WHERE p.programName = PROGRAM_NAME 
-      AND c.Code = COURSE_CODE 
-      AND curr.YEAR_ID = YEAR_ID 
-      AND curr.SEMESTER_ID = SEMESTER_ID;
+      AND c.Code = COURSE_CODE
+      AND curr.YEAR_ID = p_YEAR_ID
+      AND curr.SEMESTER_ID = p_SEMESTER_ID;
 
-    IF v_curr_id IS NOT NULL THEN
-        INSERT INTO ENROLLMENT (Grade, Status, STUDENT_ID, CURRICULUM_ID)
-        VALUES ('(Ongoing)', 'Active', v_student_id, v_curr_id);
+    -- 3. Validation and Insertion
+    IF v_student_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Enrollment Failed: Student name not found.';
+        
+    ELSEIF v_curr_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Enrollment Failed: No curriculum entry matches this Year/Semester/Course.';
+        
     ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Curriculum entry not found.';
+        INSERT INTO enrollment (
+            Grade,
+            Status,
+            Created_By,
+            Updated_By,
+            STUDENT_ID,
+            CURRICULUM_ID
+        )
+        VALUES (
+            '(Ongoing)',
+            'Active',
+            'registrar',
+            'registrar',
+            v_student_id,
+            v_curr_id
+        );
     END IF;
 END $$
 
@@ -320,9 +344,7 @@ DELIMITER $$
 CREATE PROCEDURE GradeUpdate (
     IN p_Student_Fullname VARCHAR(60),
     IN p_Course_Code VARCHAR(7),
-    IN p_Year_ID INT,      
-    IN p_Semester_ID INT,  
-    IN p_RawGrade VARCHAR(9) -- Changed to VARCHAR(9)
+    IN p_RawGrade VARCHAR(9)
 )
 BEGIN
     DECLARE v_FinalGrade CHAR(9);
@@ -337,11 +359,10 @@ BEGIN
     SELECT e.ID INTO v_Enrollment_ID 
     FROM ENROLLMENT e
     JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number 
-    JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID
+    JOIN CURRICULUM cu ON e.CURRICULUM_ID = cu.ID
+    JOIN COURSE c ON cu.COURSE_ID = c.ID
     WHERE s.fullName = p_Student_Fullname 
       AND c.Code = p_Course_Code
-      AND e.CURRICULUM_YEAR_ID = p_Year_ID
-      AND e.CURRICULUM_SEMESTER_ID = p_Semester_ID
     LIMIT 1; 
 
     IF v_Enrollment_ID IS NOT NULL THEN
@@ -370,7 +391,7 @@ BEGIN
         
     ELSE
         SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Record not found for this Student, Course, Year, and Semester.';
+        SET MESSAGE_TEXT = 'Record not found for this Student and Course Code.';
     END IF;
 END $$
 
@@ -387,7 +408,7 @@ BEGIN
         STUDENT.ID_Number,
         STUDENT.fullName AS 'Full Name',
         STUDENT.Date_Enrolled AS 'Date Enrolled',
-        ENROLLMENT.CURRICULUM_SEMESTER_ID AS 'Semester',
+        cu.SEMESTER_ID AS 'Semester',
         PROGRAM.programName AS 'Program',
         COURSE.Code,
         COURSE.Name AS Course,
@@ -396,10 +417,12 @@ BEGIN
     FROM ENROLLMENT
     JOIN STUDENT
         ON ENROLLMENT.STUDENT_ID = STUDENT.ID_Number
+    JOIN CURRICULUM cu
+        ON ENROLLMENT.CURRICULUM_ID = cu.ID
     JOIN COURSE
-        ON ENROLLMENT.CURRICULUM_COURSE_ID = COURSE.ID
+        ON cu.COURSE_ID = COURSE.ID
     JOIN PROGRAM
-        ON ENROLLMENT.CURRICULUM_PROGRAM_ID = PROGRAM.ID
+        ON cu.PROGRAM_ID = PROGRAM.ID
     WHERE STUDENT.ID_Number = STUDENT_ID;
 END $$
 
@@ -407,9 +430,7 @@ DELIMITER ;
 -- STORED PROCEDURE END --
 
 -- TRIGGER BEGIN --
-
 /*TRIGGERS TO AUTOMATICALLY UPDATE Updated_At FOR SOME TABLES*/
-
 DELIMITER $$
 
 CREATE TRIGGER UpdateStudentTimestamp
@@ -464,24 +485,29 @@ BEGIN
     DECLARE v_course_id INT;
     SELECT COURSE_ID INTO v_course_id FROM curriculum WHERE ID = NEW.CURRICULUM_ID;
 
-    IF EXISTS (SELECT 1 FROM COURSE_PREREQUISITE WHERE COURSE_ID = v_course_id) THEN
+    IF EXISTS (
+        SELECT 1 FROM COURSE_PREREQUISITE 
+        WHERE COURSE_ID = v_course_id
+    ) THEN
         IF EXISTS (
             SELECT 1 
             FROM COURSE_PREREQUISITE cp
             WHERE cp.COURSE_ID = v_course_id
               AND cp.PREREQUISITE_ID NOT IN (
-                  SELECT c.COURSE_ID 
+                  SELECT cu.COURSE_ID
                   FROM ENROLLMENT e
-                  JOIN curriculum c ON e.CURRICULUM_ID = c.ID
-                  WHERE e.STUDENT_ID = NEW.STUDENT_ID AND e.Status = 'Passed'
+                  JOIN CURRICULUM cu ON e.CURRICULUM_ID = cu.ID
+                  WHERE e.STUDENT_ID = NEW.STUDENT_ID
+                    AND e.Status = 'Passed'
               )
         ) THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Missing required prerequisites.';
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Enrollment Denied: Missing required prerequisites.';
         END IF;
     END IF;
-END //
+END 
+// DELIMITER ;
 
-DELIMITER ;
 
 DELIMITER //
 
@@ -524,7 +550,8 @@ SELECT
     e.Status
 FROM ENROLLMENT e
 JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number
-JOIN COURSE c ON e.CURRICULUM_COURSE_ID = c.ID; 
+JOIN CURRICULUM cu ON e.CURRICULUM_ID = cu.ID
+JOIN COURSE c ON cu.COURSE_ID = c.ID; 
 
 /*VIEW FOR DEANS LISTERS*/
 CREATE VIEW deansList AS
@@ -535,7 +562,8 @@ SELECT
     SUM(cr.Credit_Units) AS Total_Units
 FROM STUDENT s
 JOIN ENROLLMENT enr ON s.ID_Number = enr.STUDENT_ID
-JOIN COURSE cr ON enr.CURRICULUM_COURSE_ID = cr.ID
+JOIN CURRICULUM cu ON enr.CURRICULUM_ID = cu.ID
+JOIN COURSE cr ON cu.COURSE_ID = cr.ID
 WHERE 
     -- Exclude students who have any single grade lower than 2.00, or an R/F
     NOT EXISTS (
@@ -559,14 +587,14 @@ HAVING
 
 -- INSERT INTO BEGIN --
 /* BASE SETUP DATA */
-INSERT INTO `YEAR` (`ID`) VALUES (1), (2), (3), (4);
+INSERT INTO `year` (`ID`) VALUES (1), (2), (3), (4);
 
-INSERT INTO `PROGRAM` (`programName`) VALUES ('BSCS'), ('BSIT');
+INSERT INTO `program` (`programName`) VALUES ('BSCS'), ('BSIT');
 
-INSERT INTO `SEMESTER` (`ID`) VALUES (1), (2);
+INSERT INTO `semester` (`ID`) VALUES (1), (2);
 
 /* STUDENT MASTER RECORDS */
-INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`) VALUES 
+INSERT INTO `student` (`ID_Number`, `lastName`, `firstName`, `Section`) VALUES 
 ('2024-001', 'Abril', 'Sheryn Mae', 'A'),
 ('2024-002', 'Ananayo', 'Breneth Jian', 'A'),
 ('2024-003', 'Bacani', 'Jonard', 'A'),
@@ -605,16 +633,16 @@ INSERT INTO `STUDENT` (`ID_Number`, `lastName`, `firstName`, `Section`) VALUES
 ('2024-036', 'Mangulabnan', 'Edgardo Jr.', 'A');
 
 /*COURSES*/
-INSERT INTO `COURSE` (`ID`, `Code`, `Name`) VALUES 
+INSERT INTO `course` (`ID`, `Code`, `Name`) VALUES 
 (1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
 (3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
 (5, 'DATAMA1', 'Database Mgmt 1'), (6, 'DATAMA2', 'Database Mgmt 2');
 
 /*COURSE PREREQUISITES*/
-INSERT INTO `COURSE_PREREQUISITE` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
+INSERT INTO `course_prerequisite` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
 
 /* CURRICULUM MAPPING */
-INSERT INTO `CURRICULUM` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
+INSERT INTO `curriculum` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
 (1, 2, 1, 5), (1, 2, 2, 2), (1, 2, 2, 3), (1, 2, 2, 4), (1, 2, 2, 6), (1, 3, 1, 1),
 (1, 3, 1, 5), (1, 3, 2, 2), (1, 3, 2, 5), (1, 3, 2, 6), (2, 2, 1, 1), (2, 2, 1, 3),
 (2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
