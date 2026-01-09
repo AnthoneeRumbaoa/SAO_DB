@@ -176,7 +176,7 @@ CREATE PROCEDURE AddStudent (
     IN ID_Number VARCHAR(8),
     IN lastName VARCHAR(30),
     IN firstName VARCHAR(30),
-    IN Section VARCHAR(45),
+    IN Section VARCHAR(45)
 )
 BEGIN
     IF NOT EXISTS (
@@ -196,7 +196,7 @@ BEGIN
             firstName,
             Section,
             'registrar',
-            'registrar',
+            'registrar'
         );
     END IF;
 END $$
@@ -401,7 +401,7 @@ BEGIN
     SELECT
         STUDENT.ID_Number,
         STUDENT.fullName AS 'Full Name',
-        STUDENT.YEAR_ID AS 'Year',
+        STUDENT.Date_Enrolled AS 'Date Enrolled',
         ENROLLMENT.CURRICULUM_SEMESTER_ID AS 'Semester',
         PROGRAM.programName AS 'Program',
         COURSE.Code,
