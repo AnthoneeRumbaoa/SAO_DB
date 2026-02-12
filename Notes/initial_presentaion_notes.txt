@@ -1,0 +1,54 @@
+// Initial Presentation Notes
+
+1. Problem Definition
+- Draft a statement of the problem:
+- Current system needs scaling.
+- Potential issues may arise that are not yet visible.
+- Identify pain points (performance bottlenecks, time complexity, limited flexibility).
+
+2. Requirements Gathering
+- Decide which tables belong in MongoDB and which remain in SQL.
+- Document the purpose of moving each dataset:
+- Example: Unstructured data → MongoDB, transactional data → SQL.
+- Define features to be added and how they solve existing issues.
+
+3. System Design
+- Prepare design artifacts:
+- ERD (Entity Relationship Diagram) for SQL.
+- JSON schema for MongoDB collections.
+- Show hybrid architecture:
+- How MySQL and MongoDB will work together in one process.
+- Specify tech stack (Node.js + other frameworks, libraries, drivers).
+- Identify database driver used for integration.
+
+4. Data Integration & Processes
+- Define inter-process communication between MongoDB and SQL.
+- Show data separation rules (what belongs where).
+- Ensure ACID compliance for SQL transactions.
+- Plan rollback and logging mechanisms:
+- Failed attempts must be recorded.
+- Rollback attempts should be logged.
+- Logs must be separated (internal vs. external).
+
+5. Logging & Analytics
+- External logs: customer/rider-facing (parcel status updates).
+- Internal logs: system tracking, rollback attempts.
+- Analytics logs:
+- Products added to cart.
+- Returns (with cause: manufacturer issue, customer damage, etc.).
+- Page visits and category tracking.
+
+6. Feature Implementation
+- Implement proposed features:
+- Hybrid database operations (both SQL and MongoDB active).
+- Scalability improvements (time complexity reduction, convenience).
+- Logging system with separation of internal/external views.
+
+7. Testing
+- Produce test data for the new version of the system.
+
+8. Additional Info
+- Final project = 40% of grade final grade/20% of everall grade.
+- Activities = 60% of final grades.
+- Midterm & Final = 50 50.
+- Make a submission folder (green).
