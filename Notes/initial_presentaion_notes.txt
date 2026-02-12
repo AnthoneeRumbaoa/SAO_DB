@@ -52,3 +52,18 @@
 - Activities = 60% of final grades.
 - Midterm & Final = 50 50.
 - Make a submission folder (green).
+
+CARL
+GROUP 1
+Post Presentation feedback for group 1:
+-Show a problem statemen(?)
+**-**Show diagrams of your system architecture
+
+GROUP 3
+During Presentation Notes:
+-Showed technical architeture diagram
+-Questioned about the fact that they only have one category of logs (perhaps logs segragated in categories would help)
+-Mention distinct problems that come with your system architecture followed with the solution to the problem
+-There should be a history log of everything including failed operation attempts.
+-They showed what each "user" of the system will see
+
