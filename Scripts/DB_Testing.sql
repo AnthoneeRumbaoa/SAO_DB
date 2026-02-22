@@ -667,3 +667,27 @@ DELIMITER ;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+/* BASE SETUP DATA */
+INSERT INTO `year` (`ID`) VALUES (1), (2), (3), (4);
+
+INSERT INTO `program` (`programName`) VALUES ('BSCS'), ('BSIT');
+
+INSERT INTO `semester` (`ID`) VALUES (1), (2);
+
+/*COURSES*/
+INSERT INTO `course` (`ID`, `Code`, `Name`) VALUES 
+(1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
+(3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
+(5, 'DATAMA1', 'Database Mgmt 1'), (6, 'DATAMA2', 'Database Mgmt 2');
+
+/*COURSE PREREQUISITES*/
+INSERT INTO `course_prerequisite` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
+
+/* CURRICULUM MAPPING */
+INSERT INTO `curriculum` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
+(1, 2, 1, 5), (1, 2, 2, 2), (1, 2, 2, 3), (1, 2, 2, 4), (1, 2, 2, 6), (1, 3, 1, 1),
+(1, 3, 1, 5), (1, 3, 2, 2), (1, 3, 2, 5), (1, 3, 2, 6), (2, 2, 1, 1), (2, 2, 1, 3),
+(2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
+(2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
+(2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
