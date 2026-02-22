@@ -764,23 +764,6 @@ call AddStudent('2024-003', 'Allen', 'Barry', 'A');
 call AddStudent('2024-004', 'Einstein', 'Albert', 'B');
 call AddStudent('2024-005', 'Euler', 'Leonhard', 'B');
 
-/*STUDENT ENROLLMENTS*/
-Call studentenroll('Carl Dheyniel Genova', 'DATAMA1', 'BSIT', 2, 1);
-Call studentenroll('Carl Dheyniel Genova', 'PROG1', 'BSIT', 2, 1);
-Call studentenroll('Carl Dheyniel Genova', 'WEBDEV1', 'BSIT', 2, 1);
-
-Call studentenroll('Michael James', 'DATAMA1', 'BSIT', 2, 1);
-Call studentenroll('Michael James', 'PROG1', 'BSIT', 2, 1);
-Call studentenroll('Michael James', 'WEBDEV1', 'BSIT', 2, 1);
-
-Call studentenroll('Barry Allen', 'DATAMA1', 'BSIT', 2, 1);
-Call studentenroll('Barry Allen', 'PROG1', 'BSIT', 2, 1);
-Call studentenroll('Barry Allen', 'WEBDEV1', 'BSIT', 2, 1);
-
-Call studentenroll('Albert Einstein', 'DATAMA1', 'BSCS', 2, 1);
-
-Call studentenroll('Leonhard Euler', 'DATAMA1', 'BSCS', 2, 1);
-
 /* BASE SETUP DATA */
 INSERT INTO `year` (`ID`) VALUES (1), (2), (3), (4);
 
@@ -804,3 +787,20 @@ INSERT INTO `curriculum` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) V
 (2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
 (2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
 (2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
+
+/*STUDENT ENROLLMENTS*/
+Call studentenroll('Carl Dheyniel Genova', 'DATAMA1', 'BSIT', 2, 1);
+Call studentenroll('Carl Dheyniel Genova', 'PROG1', 'BSIT', 2, 1);
+Call studentenroll('Carl Dheyniel Genova', 'WEBDEV1', 'BSIT', 2, 1);
+
+Call studentenroll('Michael James', 'DATAMA1', 'BSIT', 2, 1);
+Call studentenroll('Michael James', 'PROG1', 'BSIT', 2, 1);
+Call studentenroll('Michael James', 'WEBDEV1', 'BSIT', 2, 1);
+
+Call studentenroll('Barry Allen', 'DATAMA1', 'BSIT', 2, 1);
+Call studentenroll('Barry Allen', 'PROG1', 'BSIT', 2, 1);
+Call studentenroll('Barry Allen', 'WEBDEV1', 'BSIT', 2, 1);
+
+Call studentenroll('Albert Einstein', 'DATAMA1', 'BSCS', 2, 1);
+
+Call studentenroll('Leonhard Euler', 'DATAMA1', 'BSCS', 2, 1);
