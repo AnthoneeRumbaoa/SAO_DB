@@ -664,9 +664,105 @@ END$$
 
 DELIMITER ;
 
+DELIMITER $$
+
+USE `sao_db`$$
+
+CREATE DEFINER=`root`@`localhost` TRIGGER `sao_db`.`AutoAdvanceYearSemester`
+AFTER INSERT ON `sao_db`.`enrollment`
+FOR EACH ROW
+BEGIN
+    DECLARE v_enrolled_year INT;
+    DECLARE v_enrolled_sem INT;
+    DECLARE v_curr_year INT;
+    DECLARE v_curr_sem INT;
+    
+    DECLARE v_pending_year_subjects INT DEFAULT 1;
+    DECLARE v_pending_sem_subjects INT DEFAULT 1;
+    
+    DECLARE v_new_year INT;
+    DECLARE v_new_sem INT;
+
+    -- 1. Fetch the Year and Semester of the course the student just enrolled in
+    SELECT YEAR_ID, SEMESTER_ID INTO v_enrolled_year, v_enrolled_sem
+    FROM curriculum 
+    WHERE ID = NEW.CURRICULUM_ID;
+
+    -- 2. Fetch the student's current Year and Semester
+    SELECT currentYear, currentSemester INTO v_curr_year, v_curr_sem
+    FROM student 
+    WHERE ID_Number = NEW.STUDENT_ID;
+
+    -- Initialize the new variables with the current values to start
+    SET v_new_year = v_curr_year;
+    SET v_new_sem = v_curr_sem;
+
+    -- -----------------------------------------------------
+    -- 3. Evaluate Year Update Logic
+    -- -----------------------------------------------------
+    -- Check if they are enrolling in the immediate next year
+    IF v_enrolled_year = v_curr_year + 1 THEN
+        -- Count how many subjects from their CURRENT year are NOT Passed and NOT 'R'
+        SELECT COUNT(*) INTO v_pending_year_subjects
+        FROM enrollment e
+        JOIN curriculum c ON e.CURRICULUM_ID = c.ID
+        WHERE e.STUDENT_ID = NEW.STUDENT_ID
+          AND c.YEAR_ID = v_curr_year
+          AND e.Status != 'Passed'
+          AND e.Grade != 'R';
+          
+        -- If all previous year subjects are cleared, increment the year
+        IF v_pending_year_subjects = 0 THEN
+            SET v_new_year = v_curr_year + 1;
+        END IF;
+    END IF;
+
+    -- -----------------------------------------------------
+    -- 4. Evaluate Semester Update Logic
+    -- -----------------------------------------------------
+    -- Check if they are enrolling in the immediate next semester 
+    -- (If current is 1->2, 2->3, or if 3->1)
+    IF v_enrolled_sem = CASE WHEN v_curr_sem = 3 THEN 1 ELSE v_curr_sem + 1 END THEN
+        -- Count how many subjects from their CURRENT semester are NOT Passed and NOT 'R'
+        SELECT COUNT(*) INTO v_pending_sem_subjects
+        FROM enrollment e
+        JOIN curriculum c ON e.CURRICULUM_ID = c.ID
+        WHERE e.STUDENT_ID = NEW.STUDENT_ID
+          AND c.YEAR_ID = v_curr_year
+          AND c.SEMESTER_ID = v_curr_sem
+          AND e.Status != 'Passed'
+          AND e.Grade != 'R';
+          
+        -- If all previous semester subjects are cleared, advance the semester
+        IF v_pending_sem_subjects = 0 THEN
+            SET v_new_sem = CASE WHEN v_curr_sem = 3 THEN 1 ELSE v_curr_sem + 1 END;
+        END IF;
+    END IF;
+
+    -- -----------------------------------------------------
+    -- 5. Apply Updates
+    -- -----------------------------------------------------
+    -- Only run an UPDATE query on the student table if the values actually changed
+    IF v_new_year != v_curr_year OR v_new_sem != v_curr_sem THEN
+        UPDATE student
+        SET currentYear = v_new_year,
+            currentSemester = v_new_sem
+        WHERE ID_Number = NEW.STUDENT_ID;
+    END IF;
+
+END$$
+
+DELIMITER ;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+/*STUDENTS*/
+call AddStudent('2024-001', 'Genova', 'Carl Dheyniel', 'A');
+call AddStudent('2024-002', 'James', 'Michael', 'A');
+call AddStudent('2024-003', 'Allen', 'Barry', 'A');
+call AddStudent('2024-004', 'Einstein', 'Albert', 'B');
+call AddStudent('2024-005', 'Euler', 'Leonhard', 'B');
 
 /* BASE SETUP DATA */
 INSERT INTO `year` (`ID`) VALUES (1), (2), (3), (4);
