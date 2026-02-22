@@ -159,8 +159,8 @@ CREATE TABLE IF NOT EXISTS `sao_db`.`student` (
   `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
   `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
-  `currentYear` INT NOT NULL,
-  `currentSemester` INT NOT NULL,
+  `currentYear` INT NOT NULL DEFAULT 1,
+  `currentSemester` INT NOT NULL DEFAULT 1,
   PRIMARY KEY (`ID_Number`),
   INDEX `lastName_index` (`lastName` ASC) VISIBLE)
 ENGINE = InnoDB
