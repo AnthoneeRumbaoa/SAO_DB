@@ -1,204 +1,218 @@
-DROP DATABASE IF EXISTS SAO_DB;
-CREATE SCHEMA IF NOT EXISTS SAO_DB;
-USE SAO_DB;
+-- MySQL Workbench Forward Engineering
 
--- CREATE TABLE BEGIN --
-/* TABLE FOR ACADEMIC YEARS */
-CREATE TABLE year (
-  ID INT NOT NULL,
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`));
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
-/* TABLE FOR ACADEMIC PROGRAMS */
-CREATE TABLE program (
-  ID INT NOT NULL AUTO_INCREMENT,
-  programName VARCHAR(45) NOT NULL DEFAULT " ",
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`),
-  UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE);
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema sao_db
+-- -----------------------------------------------------
 
-/* TABLE FOR SEMESTERS */
-CREATE TABLE semester (
-  ID INT NOT NULL,
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID`));
+-- -----------------------------------------------------
+-- Schema sao_db
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `sao_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
+USE `sao_db` ;
 
-/* TABLE FOR COURSE CATALOG */
-CREATE TABLE course (
-  ID INT NOT NULL AUTO_INCREMENT,
-  Code VARCHAR(7) NOT NULL DEFAULT " ",
-  Name VARCHAR(50) NOT NULL DEFAULT " ",
-  Credit_Units INT NOT NULL DEFAULT 3,
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
+-- -----------------------------------------------------
+-- Table `sao_db`.`course`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`course` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `Code` VARCHAR(7) NOT NULL DEFAULT ' ',
+  `Name` VARCHAR(50) NOT NULL DEFAULT ' ',
+  `Credit_Units` INT NOT NULL DEFAULT '3',
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
   PRIMARY KEY (`ID`),
   UNIQUE INDEX `Code_UNIQUE` (`Code` ASC) VISIBLE,
-  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE);
+  UNIQUE INDEX `Name_UNIQUE` (`Name` ASC) VISIBLE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 7
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
-/* TABLE FOR STUDENT MASTERLIST */
-CREATE TABLE student (
-  ID_Number VARCHAR(8) NOT NULL,
-  lastName VARCHAR(30) NOT NULL DEFAULT " ",
-  firstName VARCHAR(30) NOT NULL DEFAULT " ",
-  fullName varchar(60) GENERATED ALWAYS AS (CONCAT(firstName, ' ', lastName)) STORED,
-  Section VARCHAR(45) NOT NULL DEFAULT " ",
-  Date_Enrolled DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (`ID_Number`),
-  INDEX `lastName_index` (`lastName` ASC) VISIBLE);
-  
-/* TABLE FOR PROGRAM CURRICULUM DEFINITIONS */
-CREATE TABLE curriculum (
-  ID INT NOT NULL AUTO_INCREMENT,
-  PROGRAM_ID INT NOT NULL,
-  YEAR_ID INT NOT NULL,
-  SEMESTER_ID INT NOT NULL,
-  COURSE_ID INT NOT NULL,
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (ID),
-  UNIQUE INDEX `unique_curriculum_idx` (PROGRAM_ID, YEAR_ID, SEMESTER_ID, COURSE_ID),
-  CONSTRAINT `fk_CURR_PROGRAM` FOREIGN KEY (PROGRAM_ID) REFERENCES program (ID),
-  CONSTRAINT `fk_CURR_YEAR` FOREIGN KEY (YEAR_ID) REFERENCES year (ID),
-  CONSTRAINT `fk_CURR_SEMESTER` FOREIGN KEY (SEMESTER_ID) REFERENCES semester (ID),
-  CONSTRAINT `fk_CURR_COURSE` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
 
-/* TABLE FOR STUDENT ENROLLMENT AND GRADING */
-CREATE TABLE enrollment (
-  ID INT NOT NULL AUTO_INCREMENT,
-  Grade VARCHAR(9) NOT NULL DEFAULT "(Ongoing)",
-  Status ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  STUDENT_ID VARCHAR(8) NOT NULL,
-  CURRICULUM_ID INT NOT NULL, 
-  PRIMARY KEY (ID),
-  UNIQUE INDEX `unique_student_curr` (`STUDENT_ID`, `CURRICULUM_ID`),
-  CONSTRAINT `fk_enroll_student` FOREIGN KEY (STUDENT_ID) REFERENCES student (ID_Number),
-  CONSTRAINT `fk_enroll_curr_id` FOREIGN KEY (CURRICULUM_ID) REFERENCES curriculum (ID));
-
-/* TABLE FOR COURSE PREREQUISITES */
-CREATE TABLE course_prerequisite (
-  PREREQUISITE_ID INT NOT NULL,
-  COURSE_ID INT NOT NULL,
-  Created_At DATETIME NOT NULL DEFAULT NOW(),
-  Updated_At DATETIME NOT NULL DEFAULT NOW(),
-  Created_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  Updated_By VARCHAR(45) NOT NULL DEFAULT "registrar",
-  PRIMARY KEY (PREREQUISITE_ID, COURSE_ID),
+-- -----------------------------------------------------
+-- Table `sao_db`.`course_prerequisite`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`course_prerequisite` (
+  `PREREQUISITE_ID` INT NOT NULL,
+  `COURSE_ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  PRIMARY KEY (`PREREQUISITE_ID`, `COURSE_ID`),
   INDEX `fk_COURSE_PREREQUISITE_COURSE1_idx` (`COURSE_ID` ASC) VISIBLE,
-  CONSTRAINT `fk_pre_course` FOREIGN KEY (PREREQUISITE_ID) REFERENCES course (ID),
-  CONSTRAINT `fk_parent_course` FOREIGN KEY (COURSE_ID) REFERENCES course (ID));
--- CREATE TABLE END --
+  CONSTRAINT `fk_parent_course`
+    FOREIGN KEY (`COURSE_ID`)
+    REFERENCES `sao_db`.`course` (`ID`),
+  CONSTRAINT `fk_pre_course`
+    FOREIGN KEY (`PREREQUISITE_ID`)
+    REFERENCES `sao_db`.`course` (`ID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
--- FUNCTION BEGIN --
-/* HELPER FUNCTION FOR GETNUMERICGRADE */
-DELIMITER //
- 
-CREATE FUNCTION GetNumericGrade (p_grade VARCHAR(9))
-RETURNS DECIMAL(3,2)
-DETERMINISTIC
-BEGIN
-    IF p_grade = 'F' OR p_grade = 'R' OR p_grade IS NULL THEN
-        RETURN 0.00;
-    ELSEIF (p_grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
-        RETURN CAST(p_grade AS DECIMAL(3,2));
-    ELSE
-        RETURN 0.00;
-    END IF;
-END //
- 
-DELIMITER ;
 
-/* FUNCTION FOR CALCULATING GWA */
-DELIMITER //
+-- -----------------------------------------------------
+-- Table `sao_db`.`program`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`program` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `programName` VARCHAR(45) NOT NULL DEFAULT ' ',
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `programName_UNIQUE` (`programName` ASC) VISIBLE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 3
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
-CREATE FUNCTION calcGWA (
-    p_student_id VARCHAR(8)
-)
-RETURNS DECIMAL(5,2)
-DETERMINISTIC
-READS SQL DATA
-BEGIN
-    DECLARE v_total_units INT DEFAULT 0;
-    DECLARE v_weighted_sum DECIMAL(12,2) DEFAULT 0.00;
 
-    SELECT 
-        SUM(cr.Credit_Units), 
-        SUM(GetNumericGrade(enr.Grade) * cr.Credit_Units)
-    INTO v_total_units, v_weighted_sum
-    FROM ENROLLMENT enr 
-    JOIN CURRICULUM cu ON enr.CURRICULUM_ID = cu.ID
-    JOIN COURSE cr ON cu.COURSE_ID = cr.ID
-    WHERE enr.STUDENT_ID = p_student_id
-      AND enr.Grade != '(Ongoing)';
+-- -----------------------------------------------------
+-- Table `sao_db`.`semester`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`semester` (
+  `ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  PRIMARY KEY (`ID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
-    IF v_total_units > 0 THEN
-        RETURN v_weighted_sum / v_total_units;
-    ELSE
-        RETURN 0.00;
-    END IF;
-END //
 
-DELIMITER ;
--- FUNCTION END --
+-- -----------------------------------------------------
+-- Table `sao_db`.`year`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`year` (
+  `ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  PRIMARY KEY (`ID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
--- STORED PROCEDURE BEGIN --
-/* STORED PROCEDURE FOR ADDING A STUDENT */
+
+-- -----------------------------------------------------
+-- Table `sao_db`.`curriculum`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`curriculum` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `PROGRAM_ID` INT NOT NULL,
+  `YEAR_ID` INT NOT NULL,
+  `SEMESTER_ID` INT NOT NULL,
+  `COURSE_ID` INT NOT NULL,
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `unique_curriculum_idx` (`PROGRAM_ID` ASC, `YEAR_ID` ASC, `SEMESTER_ID` ASC, `COURSE_ID` ASC) VISIBLE,
+  INDEX `fk_CURR_YEAR` (`YEAR_ID` ASC) VISIBLE,
+  INDEX `fk_CURR_SEMESTER` (`SEMESTER_ID` ASC) VISIBLE,
+  INDEX `fk_CURR_COURSE` (`COURSE_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_CURR_COURSE`
+    FOREIGN KEY (`COURSE_ID`)
+    REFERENCES `sao_db`.`course` (`ID`),
+  CONSTRAINT `fk_CURR_PROGRAM`
+    FOREIGN KEY (`PROGRAM_ID`)
+    REFERENCES `sao_db`.`program` (`ID`),
+  CONSTRAINT `fk_CURR_SEMESTER`
+    FOREIGN KEY (`SEMESTER_ID`)
+    REFERENCES `sao_db`.`semester` (`ID`),
+  CONSTRAINT `fk_CURR_YEAR`
+    FOREIGN KEY (`YEAR_ID`)
+    REFERENCES `sao_db`.`year` (`ID`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 28
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `sao_db`.`student`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`student` (
+  `ID_Number` VARCHAR(8) NOT NULL,
+  `lastName` VARCHAR(30) NOT NULL DEFAULT ' ',
+  `firstName` VARCHAR(30) NOT NULL DEFAULT ' ',
+  `fullName` VARCHAR(60) GENERATED ALWAYS AS (concat(`firstName`,_utf8mb4' ',`lastName`)) STORED,
+  `Section` VARCHAR(45) NOT NULL DEFAULT ' ',
+  `Date_Enrolled` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `currentYear` INT NOT NULL,
+  `currentSemester` INT NOT NULL,
+  PRIMARY KEY (`ID_Number`),
+  INDEX `lastName_index` (`lastName` ASC) VISIBLE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
+-- -----------------------------------------------------
+-- Table `sao_db`.`enrollment`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`enrollment` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `Grade` VARCHAR(9) NOT NULL DEFAULT '(Ongoing)',
+  `Status` ENUM('Passed', 'Failed', 'Active') NOT NULL DEFAULT 'Active',
+  `Created_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Updated_At` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Created_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `Updated_By` VARCHAR(45) NOT NULL DEFAULT 'registrar',
+  `STUDENT_ID` VARCHAR(8) NOT NULL,
+  `CURRICULUM_ID` INT NOT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `unique_student_curr` (`STUDENT_ID` ASC, `CURRICULUM_ID` ASC) VISIBLE,
+  INDEX `fk_enroll_curr_id` (`CURRICULUM_ID` ASC) VISIBLE,
+  CONSTRAINT `fk_enroll_curr_id`
+    FOREIGN KEY (`CURRICULUM_ID`)
+    REFERENCES `sao_db`.`curriculum` (`ID`),
+  CONSTRAINT `fk_enroll_student`
+    FOREIGN KEY (`STUDENT_ID`)
+    REFERENCES `sao_db`.`student` (`ID_Number`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+USE `sao_db` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sao_db`.`deanslist`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`deanslist` (`ID Number` INT, `Full Name` INT, `GWA` INT, `Total_Units` INT);
+
+-- -----------------------------------------------------
+-- Placeholder table for view `sao_db`.`studenttranscripts`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sao_db`.`studenttranscripts` (`Enrollment ID` INT, `ID Number` INT, `Full Name` INT, `Course Code` INT, `Course Title` INT, `Grade` INT, `Status` INT);
+
+-- -----------------------------------------------------
+-- procedure AddCourse
+-- -----------------------------------------------------
+
 DELIMITER $$
-
-CREATE PROCEDURE AddStudent (
-    IN ID_Number VARCHAR(8),
-    IN lastName VARCHAR(30),
-    IN firstName VARCHAR(30),
-    IN Section VARCHAR(45)
-)
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM STUDENT WHERE STUDENT.ID_Number = ID_Number
-    ) THEN
-        INSERT INTO STUDENT (
-            ID_Number,
-            lastName,
-            firstName,
-            Section,
-            Created_By,
-            Updated_By
-        )
-        VALUES (
-            ID_Number,
-            lastName,
-            firstName,
-            Section,
-            'registrar',
-            'registrar'
-        );
-    END IF;
-END $$
-
-DELIMITER ;
-
-/*STORED PROCEDURE FOR ADDING A COURSE*/
-DELIMITER $$
-
-CREATE PROCEDURE AddCourse (
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddCourse`(
   IN new_COURSE_NAME VARCHAR(50),
   IN new_COURSE_CODE VARCHAR(7),
   IN new_COURSE_UNITS INT
@@ -218,34 +232,23 @@ BEGIN
           new_COURSE_UNITS
       );
     END IF;
-END $$
+END$$
+
 DELIMITER ;
 
-/*STORED PROCEDURE FOR ADDING A PROGRAM*/
+-- -----------------------------------------------------
+-- procedure AddCurriculum
+-- -----------------------------------------------------
+
 DELIMITER $$
-
-CREATE PROCEDURE AddProgram(
-  IN new_PROGRAM_NAME VARCHAR(45)
-)
-  BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM PROGRAM WHERE PROGRAM.programName = new_PROGRAM_NAME
-      ) THEN
-          INSERT INTO PROGRAM (programName) VALUES (new_PROGRAM_NAME);
-      END IF;
-  END $$
-DELIMITER ;
-
-/*STORED PROCEDURE FOR ADDING A NEW CURRICULUM ENTRY*/
-DELIMITER $$
-
-CREATE PROCEDURE AddCurriculum (
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddCurriculum`(
     IN entry_PROGRAM_NAME VARCHAR(45),
     IN entry_YEAR INT,
     IN entry_SEMESTER INT,
     IN entry_COURSE_CODE VARCHAR(7)
 )
-    BEGIN
+BEGIN
         DECLARE entry_PROGRAM_ID INT;
         DECLARE entry_COURSE_ID INT;
     
@@ -272,76 +275,93 @@ CREATE PROCEDURE AddCurriculum (
               entry_COURSE_ID
           );
         END IF;
-    END $$
+    END$$
+
 DELIMITER ;
 
+-- -----------------------------------------------------
+-- procedure AddProgram
+-- -----------------------------------------------------
 
-/* STORED PROCEDURE FOR ENROLLING A STUDENT */
 DELIMITER $$
-
-/* STORED PROCEDURE FOR ENROLLING A STUDENT (PRECISION VERSION) */
-DELIMITER $$
-
-CREATE PROCEDURE StudentEnroll (
-    IN STUDENT_FULLNAME VARCHAR(60),
-    IN COURSE_CODE VARCHAR(50),
-    IN PROGRAM_NAME VARCHAR(45),
-    IN p_YEAR_ID INT,
-    IN p_SEMESTER_ID INT
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddProgram`(
+  IN new_PROGRAM_NAME VARCHAR(45)
 )
 BEGIN
-    DECLARE v_student_id VARCHAR(8);
-    DECLARE v_curr_id INT;
-
-    SELECT ID_Number INTO v_student_id 
-    FROM student 
-    WHERE fullName = STUDENT_FULLNAME 
-    LIMIT 1;
-
-    SELECT curr.ID INTO v_curr_id 
-    FROM curriculum curr 
-    JOIN program p ON curr.PROGRAM_ID = p.ID 
-    JOIN course c ON curr.COURSE_ID = c.ID
-    WHERE p.programName = PROGRAM_NAME 
-      AND c.Code = COURSE_CODE
-      AND curr.YEAR_ID = p_YEAR_ID
-      AND curr.SEMESTER_ID = p_SEMESTER_ID;
-
-    -- 3. Validation and Insertion
-    IF v_student_id IS NULL THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Enrollment Failed: Student name not found.';
-        
-    ELSEIF v_curr_id IS NULL THEN
-        SIGNAL SQLSTATE '45000' 
-        SET MESSAGE_TEXT = 'Enrollment Failed: No curriculum entry matches this Year/Semester/Course.';
-        
-    ELSE
-        INSERT INTO enrollment (
-            Grade,
-            Status,
-            Created_By,
-            Updated_By,
-            STUDENT_ID,
-            CURRICULUM_ID
-        )
-        VALUES (
-            '(Ongoing)',
-            'Active',
-            'registrar',
-            'registrar',
-            v_student_id,
-            v_curr_id
-        );
-    END IF;
-END $$
+      IF NOT EXISTS (
+        SELECT 1 FROM PROGRAM WHERE PROGRAM.programName = new_PROGRAM_NAME
+      ) THEN
+          INSERT INTO PROGRAM (programName) VALUES (new_PROGRAM_NAME);
+      END IF;
+  END$$
 
 DELIMITER ;
 
-/* STORED PROCEDURE FOR UPDATING GRADES */
-DELIMITER $$
+-- -----------------------------------------------------
+-- procedure AddStudent
+-- -----------------------------------------------------
 
-CREATE PROCEDURE GradeUpdate (
+DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddStudent`(
+    IN ID_Number VARCHAR(8),
+    IN lastName VARCHAR(30),
+    IN firstName VARCHAR(30),
+    IN Section VARCHAR(45)
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM STUDENT WHERE STUDENT.ID_Number = ID_Number
+    ) THEN
+        INSERT INTO STUDENT (
+            ID_Number,
+            lastName,
+            firstName,
+            Section,
+            Created_By,
+            Updated_By
+        )
+        VALUES (
+            ID_Number,
+            lastName,
+            firstName,
+            Section,
+            'registrar',
+            'registrar'
+        );
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- function GetNumericGrade
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `GetNumericGrade`(p_grade VARCHAR(9)) RETURNS decimal(3,2)
+    DETERMINISTIC
+BEGIN
+    IF p_grade = 'F' OR p_grade = 'R' OR p_grade IS NULL THEN
+        RETURN 0.00;
+    ELSEIF (p_grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
+        RETURN CAST(p_grade AS DECIMAL(3,2));
+    ELSE
+        RETURN 0.00;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure GradeUpdate
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GradeUpdate`(
     IN p_Student_Fullname VARCHAR(60),
     IN p_Course_Code VARCHAR(7),
     IN p_RawGrade VARCHAR(9)
@@ -393,14 +413,79 @@ BEGIN
         SIGNAL SQLSTATE '45000' 
         SET MESSAGE_TEXT = 'Record not found for this Student and Course Code.';
     END IF;
-END $$
+END$$
 
 DELIMITER ;
-  
-/* STORED PROCEDURE FOR VIEWING STUDENT ENROLLMENTS */
-DELIMITER $$
 
-CREATE PROCEDURE StudentEnrollmentsViewer (
+-- -----------------------------------------------------
+-- procedure StudentEnroll
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `StudentEnroll`(
+    IN STUDENT_FULLNAME VARCHAR(60),
+    IN COURSE_CODE VARCHAR(50),
+    IN PROGRAM_NAME VARCHAR(45),
+    IN p_YEAR_ID INT,
+    IN p_SEMESTER_ID INT
+)
+BEGIN
+    DECLARE v_student_id VARCHAR(8);
+    DECLARE v_curr_id INT;
+
+    SELECT ID_Number INTO v_student_id 
+    FROM student 
+    WHERE fullName = STUDENT_FULLNAME 
+    LIMIT 1;
+
+    SELECT curr.ID INTO v_curr_id 
+    FROM curriculum curr 
+    JOIN program p ON curr.PROGRAM_ID = p.ID 
+    JOIN course c ON curr.COURSE_ID = c.ID
+    WHERE p.programName = PROGRAM_NAME 
+      AND c.Code = COURSE_CODE
+      AND curr.YEAR_ID = p_YEAR_ID
+      AND curr.SEMESTER_ID = p_SEMESTER_ID;
+
+    -- 3. Validation and Insertion
+    IF v_student_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Enrollment Failed: Student name not found.';
+        
+    ELSEIF v_curr_id IS NULL THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Enrollment Failed: No curriculum entry matches this Year/Semester/Course.';
+        
+    ELSE
+        INSERT INTO enrollment (
+            Grade,
+            Status,
+            Created_By,
+            Updated_By,
+            STUDENT_ID,
+            CURRICULUM_ID
+        )
+        VALUES (
+            '(Ongoing)',
+            'Active',
+            'registrar',
+            'registrar',
+            v_student_id,
+            v_curr_id
+        );
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure StudentEnrollmentsViewer
+-- -----------------------------------------------------
+
+DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `StudentEnrollmentsViewer`(
     IN STUDENT_ID VARCHAR(8)
 )
 BEGIN
@@ -425,62 +510,120 @@ BEGIN
     JOIN PROGRAM
         ON cu.PROGRAM_ID = PROGRAM.ID
     WHERE STUDENT.ID_Number = STUDENT_ID;
-END $$
+END$$
 
 DELIMITER ;
--- STORED PROCEDURE END --
 
--- TRIGGER BEGIN --
-/*TRIGGERS TO AUTOMATICALLY UPDATE Updated_At FOR SOME TABLES*/
+-- -----------------------------------------------------
+-- function calcGWA
+-- -----------------------------------------------------
+
 DELIMITER $$
+USE `sao_db`$$
+CREATE DEFINER=`root`@`localhost` FUNCTION `calcGWA`(
+    p_student_id VARCHAR(8)
+) RETURNS decimal(5,2)
+    READS SQL DATA
+    DETERMINISTIC
+BEGIN
+    DECLARE v_total_units INT DEFAULT 0;
+    DECLARE v_weighted_sum DECIMAL(12,2) DEFAULT 0.00;
 
-CREATE TRIGGER UpdateStudentTimestamp
-BEFORE UPDATE ON STUDENT
+    SELECT 
+        SUM(cr.Credit_Units), 
+        SUM(GetNumericGrade(enr.Grade) * cr.Credit_Units)
+    INTO v_total_units, v_weighted_sum
+    FROM ENROLLMENT enr 
+    JOIN CURRICULUM cu ON enr.CURRICULUM_ID = cu.ID
+    JOIN COURSE cr ON cu.COURSE_ID = cr.ID
+    WHERE enr.STUDENT_ID = p_student_id
+      AND enr.Grade != '(Ongoing)';
+
+    IF v_total_units > 0 THEN
+        RETURN v_weighted_sum / v_total_units;
+    ELSE
+        RETURN 0.00;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- View `sao_db`.`deanslist`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sao_db`.`deanslist`;
+USE `sao_db`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `sao_db`.`deanslist` AS select `s`.`ID_Number` AS `ID Number`,`s`.`fullName` AS `Full Name`,`calcGWA`(`s`.`ID_Number`) AS `GWA`,sum(`cr`.`Credit_Units`) AS `Total_Units` from (((`sao_db`.`student` `s` join `sao_db`.`enrollment` `enr` on((`s`.`ID_Number` = `enr`.`STUDENT_ID`))) join `sao_db`.`curriculum` `cu` on((`enr`.`CURRICULUM_ID` = `cu`.`ID`))) join `sao_db`.`course` `cr` on((`cu`.`COURSE_ID` = `cr`.`ID`))) where (exists(select 1 from `sao_db`.`enrollment` `e2` where ((`e2`.`STUDENT_ID` = `s`.`ID_Number`) and ((`GetNumericGrade`(`e2`.`Grade`) < 2.00) or (`e2`.`Grade` in ('R','F'))))) is false and (`enr`.`Grade` <> '(Ongoing)')) group by `s`.`ID_Number` having ((`GWA` >= 3.50) and (`Total_Units` >= 15));
+
+-- -----------------------------------------------------
+-- View `sao_db`.`studenttranscripts`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `sao_db`.`studenttranscripts`;
+USE `sao_db`;
+CREATE  OR REPLACE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `sao_db`.`studenttranscripts` AS select `e`.`ID` AS `Enrollment ID`,`s`.`ID_Number` AS `ID Number`,`s`.`fullName` AS `Full Name`,`c`.`Code` AS `Course Code`,`c`.`Name` AS `Course Title`,`e`.`Grade` AS `Grade`,`e`.`Status` AS `Status` from (((`sao_db`.`enrollment` `e` join `sao_db`.`student` `s` on((`e`.`STUDENT_ID` = `s`.`ID_Number`))) join `sao_db`.`curriculum` `cu` on((`e`.`CURRICULUM_ID` = `cu`.`ID`))) join `sao_db`.`course` `c` on((`cu`.`COURSE_ID` = `c`.`ID`)));
+USE `sao_db`;
+
+DELIMITER $$
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`UpdateCourseTimestamp`
+BEFORE UPDATE ON `sao_db`.`course`
 FOR EACH ROW
 BEGIN
     SET NEW.Updated_At = NOW();
-END $$
+END$$
 
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE TRIGGER UpdateProgramTimestamp
-BEFORE UPDATE ON PROGRAM
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`UpdateProgramTimestamp`
+BEFORE UPDATE ON `sao_db`.`program`
 FOR EACH ROW
 BEGIN
     SET NEW.Updated_At = NOW();
-END $$
+END$$
 
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE TRIGGER UpdateCourseTimestamp
-BEFORE UPDATE ON COURSE
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`UpdateStudentTimestamp`
+BEFORE UPDATE ON `sao_db`.`student`
 FOR EACH ROW
 BEGIN
     SET NEW.Updated_At = NOW();
-END $$
+END$$
 
-DELIMITER ;
-
-DELIMITER $$
-
-CREATE TRIGGER UpdateEnrollmentTimestamp
-BEFORE UPDATE ON ENROLLMENT
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`AutoUpdateStatus`
+BEFORE UPDATE ON `sao_db`.`enrollment`
 FOR EACH ROW
 BEGIN
-    SET NEW.Updated_At = NOW();
-END $$
+    DECLARE v_grade_val DECIMAL(3,2);
+ 
+    IF (NEW.Grade <=> OLD.Grade) = 0 THEN 
+        IF NEW.Grade = 'F' OR NEW.Grade = 'R' THEN
+            SET NEW.Status = 'Failed';
+        ELSEIF (NEW.Grade REGEXP '^[0-9]+(.[0-9]+)?$') THEN
+            SET v_grade_val = CAST(NEW.Grade AS DECIMAL(3,2));
+            IF v_grade_val >= 1.00 THEN
+                SET NEW.Status = 'Passed';
+            ELSE
+                SET NEW.Status = 'Failed';
+            END IF;
+        ELSE
+            SET NEW.Status = 'Active';
+        END IF;
+    END IF;
+END$$
 
-DELIMITER ;
-
-/* TRIGGER TO ENFORCE PREREQUISITE CHECKS */
-DELIMITER //
-
-CREATE TRIGGER CheckPrerequisite
-BEFORE INSERT ON ENROLLMENT
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`CheckPrerequisite`
+BEFORE INSERT ON `sao_db`.`enrollment`
 FOR EACH ROW
 BEGIN
     DECLARE v_course_id INT;
@@ -506,147 +649,21 @@ BEGIN
             SET MESSAGE_TEXT = 'Enrollment Denied: Missing required prerequisites.';
         END IF;
     END IF;
-END 
-// DELIMITER ;
+END$$
 
-
-DELIMITER //
-
-/* TRIGGER TO AUTOMATICALLY UPDATE STATUS BASED ON GRADE */
-CREATE TRIGGER AutoUpdateStatus
-BEFORE UPDATE ON ENROLLMENT
+USE `sao_db`$$
+CREATE
+DEFINER=`root`@`localhost`
+TRIGGER `sao_db`.`UpdateEnrollmentTimestamp`
+BEFORE UPDATE ON `sao_db`.`enrollment`
 FOR EACH ROW
 BEGIN
-    DECLARE v_grade_val DECIMAL(3,2);
- 
-    IF (NEW.Grade <=> OLD.Grade) = 0 THEN 
-        IF NEW.Grade = 'F' OR NEW.Grade = 'R' THEN
-            SET NEW.Status = 'Failed';
-        ELSEIF (NEW.Grade REGEXP '^[0-9]+(\.[0-9]+)?$') THEN
-            SET v_grade_val = CAST(NEW.Grade AS DECIMAL(3,2));
-            IF v_grade_val >= 1.00 THEN
-                SET NEW.Status = 'Passed';
-            ELSE
-                SET NEW.Status = 'Failed';
-            END IF;
-        ELSE
-            SET NEW.Status = 'Active';
-        END IF;
-    END IF;
-END //
- 
+    SET NEW.Updated_At = NOW();
+END$$
+
+
 DELIMITER ;
--- TRIGGER END --
 
--- VIEW BEGIN ---
-/* VIEW FOR STUDENT TRANSCRIPTS */
-CREATE VIEW studentTranscripts AS
-SELECT 
-    e.ID AS 'Enrollment ID',
-    s.ID_Number AS 'ID Number',
-    s.fullName AS 'Full Name',
-    c.Code AS 'Course Code',
-    c.Name AS 'Course Title',
-    e.Grade,
-    e.Status
-FROM ENROLLMENT e
-JOIN STUDENT s ON e.STUDENT_ID = s.ID_Number
-JOIN CURRICULUM cu ON e.CURRICULUM_ID = cu.ID
-JOIN COURSE c ON cu.COURSE_ID = c.ID; 
-
-/*VIEW FOR DEANS LISTERS*/
-CREATE VIEW deansList AS
-SELECT 
-    s.ID_Number AS 'ID Number', 
-    s.fullName AS 'Full Name', 
-    calcGWA(s.ID_Number) AS GWA,
-    SUM(cr.Credit_Units) AS Total_Units
-FROM STUDENT s
-JOIN ENROLLMENT enr ON s.ID_Number = enr.STUDENT_ID
-JOIN CURRICULUM cu ON enr.CURRICULUM_ID = cu.ID
-JOIN COURSE cr ON cu.COURSE_ID = cr.ID
-WHERE 
-    -- Exclude students who have any single grade lower than 2.00, or an R/F
-    NOT EXISTS (
-        SELECT 1 
-        FROM ENROLLMENT e2 
-        WHERE e2.STUDENT_ID = s.ID_Number 
-        AND (
-            GetNumericGrade(e2.Grade) < 2.00 
-            OR e2.Grade IN ('R', 'F')
-        )
-    )
-    -- Only consider completed courses for the unit count
-    AND enr.Grade != '(Ongoing)'
-GROUP BY s.ID_Number
-HAVING 
-    -- GWA must be at least 3.50
-    GWA >= 3.50 
-    -- Total units taken must be 15 or more
-    AND Total_Units >= 15;
--- VIEW END --
-
--- INSERT INTO BEGIN --
-/* BASE SETUP DATA */
-INSERT INTO `year` (`ID`) VALUES (1), (2), (3), (4);
-
-INSERT INTO `program` (`programName`) VALUES ('BSCS'), ('BSIT');
-
-INSERT INTO `semester` (`ID`) VALUES (1), (2);
-
-/* STUDENT MASTER RECORDS */
-INSERT INTO `student` (`ID_Number`, `lastName`, `firstName`, `Section`) VALUES 
-('2024-001', 'Abril', 'Sheryn Mae', 'A'),
-('2024-002', 'Ananayo', 'Breneth Jian', 'A'),
-('2024-003', 'Bacani', 'Jonard', 'A'),
-('2024-004', 'Biñas', 'Kurt Gabriel', 'A'),
-('2024-005', 'Buncab', 'Lance Gabriel', 'A'),
-('2024-006', 'Chavez', 'Amiel Diamond', 'A'),
-('2024-007', 'Corpuz', 'Terrence Josh', 'A'),
-('2024-008', 'Guzman', 'Klein Vincent De', 'A'),
-('2024-009', 'Cruz', 'Carlrich Dela', 'A'),
-('2024-010', 'Fama', 'Alijah Miguel', 'A'),
-('2024-011', 'Garcia', 'Ashton Brian', 'A'),
-('2024-012', 'Gemillan', 'Miles Angelo', 'A'),
-('2024-013', 'Genova', 'Carl Dheyniel', 'A'),
-('2024-014', 'Gutierrez', 'Yumilka', 'A'),
-('2024-015', 'Juane', 'Lancelot Jerico', 'A'),
-('2024-016', 'Laus', 'Angelo John Benedict', 'A'),
-('2024-017', 'Lopez', 'John Christian', 'A'),
-('2024-018', 'Mandac', 'Gian Patrick Luis', 'A'),
-('2024-019', 'Mendoza', 'Vinz Szymone', 'A'),
-('2024-020', 'Nacalaban', 'Chelsea Hillary', 'A'),
-('2024-021', 'Nagales', 'Qelvin Joszeler', 'A'),
-('2024-022', 'Nipas', 'Eunice', 'A'),
-('2024-023', 'Nollen', 'Elijah Crisehea', 'A'),
-('2024-024', 'Ochoa', 'John Adrian', 'A'),
-('2024-025', 'Padilla', 'Neichaela Antonia', 'A'),
-('2024-026', 'Peñada', 'Charl Christopher', 'A'),
-('2024-027', 'Recto', 'Rehan Rafael', 'A'),
-('2024-028', 'Revelar', 'Xander', 'A'),
-('2024-029', 'Ronquillo', 'Karol Joy', 'A'),
-('2024-030', 'Rumbaoa', 'Anthonee Jhel', 'A'),
-('2024-031', 'Sultan', 'Jan Samuel', 'A'),
-('2024-032', 'Tobias', 'Heinrich', 'A'),
-('2024-033', 'Villa', 'Andrei Antonio', 'A'),
-('2024-034', 'Viray', 'Kristoff Aadryk', 'A'),
-('2024-035', 'Whitwell', 'Daniel James', 'A'),
-('2024-036', 'Mangulabnan', 'Edgardo Jr.', 'A');
-
-/*COURSES*/
-INSERT INTO `course` (`ID`, `Code`, `Name`) VALUES 
-(1, 'PROG1', 'Programming 1'), (2, 'PROG2', 'Programming 2'), 
-(3, 'WEBDEV1', 'Web Dev 1'), (4, 'WEBDEV2', 'Web Dev 2'), 
-(5, 'DATAMA1', 'Database Mgmt 1'), (6, 'DATAMA2', 'Database Mgmt 2');
-
-/*COURSE PREREQUISITES*/
-INSERT INTO `course_prerequisite` (`PREREQUISITE_ID`, `COURSE_ID`) VALUES (1, 2), (3, 4), (5, 6);
-
-/* CURRICULUM MAPPING */
-INSERT INTO `curriculum` (`PROGRAM_ID`, `YEAR_ID`, `SEMESTER_ID`, `COURSE_ID`) VALUES
-(1, 2, 1, 5), (1, 2, 2, 2), (1, 2, 2, 3), (1, 2, 2, 4), (1, 2, 2, 6), (1, 3, 1, 1),
-(1, 3, 1, 5), (1, 3, 2, 2), (1, 3, 2, 5), (1, 3, 2, 6), (2, 2, 1, 1), (2, 2, 1, 3),
-(2, 2, 1, 5), (2, 2, 2, 1), (2, 2, 2, 2), (2, 2, 2, 3), (2, 2, 2, 4), (2, 2, 2, 5),
-(2, 2, 2, 6), (2, 3, 1, 1), (2, 3, 1, 3), (2, 3, 1, 5), (2, 3, 2, 1), (2, 3, 2, 2),
-(2, 3, 2, 3), (2, 3, 2, 4), (2, 3, 2, 6);
--- INSERT INTO END --
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
